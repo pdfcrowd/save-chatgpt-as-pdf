@@ -1,0 +1,7 @@
+.*
+*~
+makefile
+manifest*
+*.zip
+exclude.txt
+userscript*

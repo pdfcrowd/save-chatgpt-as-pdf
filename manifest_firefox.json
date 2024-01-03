@@ -1,0 +1,42 @@
+// manifest.json
+{
+    "manifest_version": 3,
+    "name": "Save ChatGPT as PDF",
+    "version": "1.0",
+    "description": "Turn your chats into neatly formatted PDF.",
+    "action": {
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "24": "icons/icon24.png",
+            "32": "icons/icon32.png",
+            "48": "icons/icon48.png",
+            "64": "icons/icon64.png",
+            "128": "icons/icon128.png"
+        }
+    },
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "24": "icons/icon24.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "64": "icons/icon64.png",
+        "128": "icons/icon128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://chat.openai.com/*"],
+            "js": ["common.js", "request.js"]
+        }
+    ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{0838ab1b-8795-4002-8da1-9d32de3c6c3b}",
+      "strict_min_version": "109.0"
+    }
+  },
+  
+    "minimum_chrome_version" : "100"
+}
