@@ -12,6 +12,7 @@
 // @require      https://github.com/pdfcrowd/save-chatgpt-as-pdf/raw/master/common.js
 // @updateURL    https://github.com/pdfcrowd/save-chatgpt-as-pdf/raw/master/userscript/save-chatgpt-as-pdf.user.js
 // @downloadURL  https://github.com/pdfcrowd/save-chatgpt-as-pdf/raw/master/userscript/save-chatgpt-as-pdf.user.js
+// @license MIT
 // ==/UserScript==
 /* globals pdfcrowdChatGPT */
 
