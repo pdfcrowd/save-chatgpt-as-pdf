@@ -16,6 +16,11 @@
 // ==/UserScript==
 /* globals pdfcrowdChatGPT */
 
+// do not modify or delete the following line, it serves as a placeholder for
+// the common.js contents which is copied here by "make build-userscript-single-file"
+// 
+// common.js placeholder
+
 (function() {
     pdfcrowdChatGPT.doRequest = function(data, fileName, fnCleanup) {
         const formData = new FormData();
