@@ -10,7 +10,7 @@
 
 ### Browser Extension
 
-Install the extension for [Firefox](#) or [Google Chrome](#).
+Install the extension for [Firefox](https://addons.mozilla.org/en-US/firefox/addon/save-chatgpt-as-pdf/) or [Google Chrome](#).
 
 In Chrome it should start working automatically.
 
