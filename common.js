@@ -7,6 +7,29 @@ pdfcrowdChatGPT.username = 'chat-gpt';
 pdfcrowdChatGPT.apiKey = '29d211b1f6924c22b7a799b4e8fecb7e';
 
 pdfcrowdChatGPT.init = function() {
+    const urlPattern = /^.*?:\/\/chat\.openai\.com\/[cg]\/.*/;
+    let currentUrl = '';
+
+    function checkUrlChange() {
+        const newUrl = window.location.href;
+        if(currentUrl !== newUrl) {
+            currentUrl = newUrl;
+
+            const blocks = document.getElementsByClassName('pdfcrowd-block');
+            if(urlPattern.test(currentUrl)) {
+                for(let i = 0; i < blocks.length; i++) {
+                    blocks[i].classList.remove('pdfcrowd-hidden');
+                }
+            } else {
+                for(let i = 0; i < blocks.length; i++) {
+                    blocks[i].classList.add('pdfcrowd-hidden');
+                }
+            }
+        }
+    }
+
+    setInterval(checkUrlChange, 2000);
+
     // remote images live at least 1 minute
     const minImageDuration = 60000;
 
@@ -17,7 +40,6 @@ pdfcrowdChatGPT.init = function() {
 <style>
  .pdfcrowd-block {
      position: fixed;
-     z-index: 999;
      height: 36px;
      top: 10px;
      right: 55px;
@@ -440,6 +462,8 @@ pdfcrowdChatGPT.init = function() {
         const container = document.createElement('div');
         container.innerHTML = pdfcrowdBlockHtml;
         document.body.appendChild(container);
+
+        checkUrlChange();
 
         buttons = document.querySelectorAll('.pdfcrowd-convert');
         buttons.forEach(element => {
