@@ -25,7 +25,7 @@ In Firefox click on the extension icon or enable Always Allow on chat.openai.com
    - [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) - Firefox
 
 2. **Install the user script**:
-   click [here](https://github.com/pdfcrowd/save-chatgpt-as-pdf/raw/master/userscript/save-chatgpt-as-pdf.user.js).
+   click [here](https://greasyfork.org/en/scripts/484463-save-chatgpt-as-pdf).
 
 Once you've installed and enabled the user script, it should start working automatically.
 
