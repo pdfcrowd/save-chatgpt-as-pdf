@@ -3,3 +3,8 @@ Changes in 1.0
 
 Changes in 1.1
 - Show conversion button on chats and dall-e only
+
+Changes in 1.2
+- Fix the conversion pages with math formulas
+- Fix the conversion of shared chats
+- Fix the appearance of dropdown menu in dark theme

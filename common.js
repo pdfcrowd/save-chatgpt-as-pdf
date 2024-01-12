@@ -7,7 +7,7 @@ pdfcrowdChatGPT.username = 'chat-gpt';
 pdfcrowdChatGPT.apiKey = '29d211b1f6924c22b7a799b4e8fecb7e';
 
 pdfcrowdChatGPT.init = function() {
-    const urlPattern = /^.*?:\/\/chat\.openai\.com\/[cg]\/.*/;
+    const urlPattern = /^.*?:\/\/chat\.openai\.com\/((c|g|share)\/.*)?$/;
     let currentUrl = '';
 
     function checkUrlChange() {
@@ -115,6 +115,7 @@ pdfcrowdChatGPT.init = function() {
  #pdfcrowd-extra-btns {
      border: 1px solid rgba(0,0,0,.1);
      background-color: #fff;
+     color: #000;
  }
 
  .pdfcrowd-extra-btn:hover {
@@ -258,103 +259,6 @@ pdfcrowdChatGPT.init = function() {
 </div>
 `;
 
-    const customCss = `
-        button {
-            all: initial;
-        }
-
-        pre code.hljs {
-            white-space: pre-wrap;
-        }
-
-        .icon-sm {
-            stroke-width: 2;
-            margin-left: .25rem;
-            margin-top: .25rem;
-            height: 1rem;
-            width: 1rem;
-        }
-
-        form, button, .tabular-nums, .text-token-text-tertiary {
-            display: none !important;
-        }
-
-        .text-white {
-            --tw-text-opacity: 1;
-            color: rgba(255,255,255,var(--tw-text-opacity));
-        }
-
-        .font-semibold {
-            font-weight: 600;
-        }
-
-        html {
-            font-family: Noto Sans,sans-serif,Helvetica Neue,Arial,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
-        }
-
-        p {
-            line-height: 1.5;
-        }
-
-        code:not(.hljs) {
-            font-weight: 600;
-        }
-
-        code:not(.hljs)::before {
-            content: '\\\`';
-        }
-
-        code:not(.hljs)::after {
-            content: '\\\`';
-        }
-
-        .text-xs {
-            font-size: .75rem;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .bg-gray-800 {
-            background-color: #ccc;
-        }
-
-        .gizmo-shadow-stroke img {
-            width: 24px;
-            height: 24px;
-        }
-
-        .gizmo-shadow-stroke {
-            margin-right: .5rem;
-            display: inline-block;
-            vertical-align: text-bottom;
-        }
-
-        .py-2 {
-            padding-top: .5rem;
-            padding-bottom: .5rem;
-        }
-
-        .px-4 {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-
-        .grid * {
-            display: inline-block !important;
-        }
-
-        .grid img {
-            margin-right: .5rem;
-            max-width: 45vw;
-            height: auto;
-            color: unset !important;
-        }
-        `;
-
-    const head = '<meta charSet="utf-8"/><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/styles/default.min.css">';
-
     function prepareContent(element) {
         element = element.cloneNode(true);
 
@@ -414,13 +318,19 @@ pdfcrowdChatGPT.init = function() {
         const main = document.getElementsByTagName('main')[0];
         const content = prepareContent(main);
 
-        const title = document.getElementsByTagName('title')[0].text;
-        const body = `<h1 class="main-title">${title}</h1>` + content;
+        let body;
+        let title = '';
+        const h1 = main.querySelector('h1');
+        if(h1) {
+            title = h1.textContent;
+            body = content;
+        } else {
+            title = document.getElementsByTagName('title')[0].textContent;
+            body = `<h1 class="main-title">${title}</h1>` + content;
+        }
 
         const data = {
-            text: `<!DOCTYPE html><html><head>${head}</head><body>${body}</body>`,
-            disable_javascript: true,
-            custom_css: customCss,
+            text: `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body>${body}</body>`,
             jpeg_quality: 70,
             image_dpi: 150,
             convert_images_to_jpeg: 'all',
@@ -526,15 +436,15 @@ pdfcrowdChatGPT.showError = function(status, text) {
   } else {
     html = ['<strong>Error occurred</strong>'];
     if (status) {
-      html.push(`Code: ${status}`);    
+      html.push(`Code: ${status}`);
       html.push("Please try again later");
+    } else {
+      html.push(text);
+    }
       html.push(`If the problem persists, contact us at
             <a href="mailto:support@pdfcrowd.com?subject=ChatGPT%20error">
               support@pdfcrowd.com
             </a>`);
-    } else {
-      html.push(text);
-    }
   }
   html = html.join('<br>');
   document.getElementById('pdfcrowd-error-overlay').style.display = 'flex';
