@@ -8,3 +8,6 @@ Changes in 1.2
 - Fixed conversion of math formulae
 - Fixed conversion of shared chats
 - Fixed the appearance of dropdown menu in the dark theme
+
+Changes in 1.3
+- Improved detection of the page title

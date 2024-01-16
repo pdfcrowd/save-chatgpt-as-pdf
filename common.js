@@ -325,7 +325,10 @@ pdfcrowdChatGPT.init = function() {
             title = h1.textContent;
             body = content;
         } else {
-            title = document.getElementsByTagName('title')[0].textContent;
+            const chatTitle = document.querySelector(`nav a[href="${window.location.pathname}"]`);
+            title = chatTitle
+                ? chatTitle.textContent
+                : document.getElementsByTagName('title')[0].textContent;
             body = `<h1 class="main-title">${title}</h1>` + content;
         }
 

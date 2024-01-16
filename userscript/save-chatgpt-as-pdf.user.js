@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Save ChatGPT as PDF
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Turn your chats into neatly formatted PDF.
 // @author       Pdfcrowd (https://pdfcrowd.com/)
 // @match        https://chat.openai.com/*
