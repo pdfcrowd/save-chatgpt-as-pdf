@@ -259,8 +259,63 @@ pdfcrowdChatGPT.init = function() {
 </div>
 `;
 
+    function findRow(element) {
+        while(element) {
+            if(element.classList &&
+               element.classList.contains('text-token-text-primary')) {
+                return element;
+            }
+            element = element.parentElement;
+        }
+        return null;
+    }
+
+    function hasParent(element, parent) {
+        while(element) {
+            if(element === parent) {
+                return true;
+            }
+            element = element.parentElement;
+        }
+        return false;
+    }
+
+    function prepareSelection(element) {
+        const selection = window.getSelection();
+        if(!selection.isCollapsed) {
+            const rangeCount = selection.rangeCount;
+            if(rangeCount > 0) {
+                const startElement = findRow(
+                    selection.getRangeAt(0).startContainer.parentElement);
+                if(startElement && hasParent(startElement, element)) {
+                    // selection is in the main block
+                    const endElement = findRow(
+                        selection.getRangeAt(
+                            rangeCount-1).endContainer.parentElement);
+                    if(endElement &&
+                       endElement.parentElement === startElement.parentElement) {
+                        // valid selection
+                        const newContainer = document.createElement('main');
+                        newContainer.classList.add('h-full', 'w-full');
+                        let currentElement = startElement;
+                        while(currentElement) {
+                            newContainer.appendChild(
+                                currentElement.cloneNode(true));
+                            if(currentElement === endElement) {
+                                break;
+                            }
+                            currentElement = currentElement.nextElementSibling;
+                        }
+                        return newContainer;
+                    }
+                }
+            }
+        }
+        return element.cloneNode(true);
+    }
+
     function prepareContent(element) {
-        element = element.cloneNode(true);
+        element = prepareSelection(element);
 
         // fix nested buttons error
         element.querySelectorAll('button button').forEach(button => {
