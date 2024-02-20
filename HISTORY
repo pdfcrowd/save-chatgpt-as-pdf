@@ -13,4 +13,4 @@ Changes in 1.3
 - Improved detection of the page title
 
 Changes in 1.4
-- Added option to convert just a part of the chat by text selection
+- Added an option to convert only the selected part of the chat
