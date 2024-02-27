@@ -14,3 +14,7 @@ Changes in 1.3
 
 Changes in 1.4
 - Added an option to convert only the selected part of the chat
+
+Changes in 1.5
+- Added a help dialog
+- Minor chat selection fix
