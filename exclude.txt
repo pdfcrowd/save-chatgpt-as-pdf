@@ -5,3 +5,4 @@ manifest*
 *.zip
 exclude.txt
 userscript*
+tools

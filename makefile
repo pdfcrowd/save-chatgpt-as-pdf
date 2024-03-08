@@ -1,8 +1,11 @@
 help:
 	cat makefile
 
-build: build-firefox build-chrome build-userscript-single-file
+build: check-version build-firefox build-chrome build-userscript-single-file
 	true
+
+check-version:
+	@tools/check-version.sh
 
 build-firefox: copyfiles
 	rm -rf $(CURDIR)/save-gptchat-as-pdf-firefox.zip

@@ -18,3 +18,8 @@ Changes in 1.4
 Changes in 1.5
 - Added a help dialog
 - Minor chat selection fix
+
+Changes in 1.6
+- Added the "Single Page" option
+- Fixed: extra dots in the input file name
+- Fixed: chat selection fix (sub-button)
