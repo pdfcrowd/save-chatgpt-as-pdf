@@ -518,6 +518,10 @@ pdfcrowdChatGPT.init = function() {
         document.getElementById('pdfcrowd-help-overlay').style.display = 'flex';
     }
 
+    function addPdfExtension(filename) {
+        return filename.replace(/\.*$/, '') + '.pdf';
+    }
+
     function convert(event) {
         let trigger = event.target;
         document.getElementById('pdfcrowd-extra-btns').classList.add(
@@ -557,6 +561,8 @@ pdfcrowdChatGPT.init = function() {
             body = `<h1 class="main-title">${title}</h1>` + content;
         }
 
+        title = title.trim();
+
         const data = {
             text: `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body>${body}</body>`,
             jpeg_quality: 70,
@@ -589,7 +595,7 @@ pdfcrowdChatGPT.init = function() {
             data.viewport_width = 800;
         }
 
-        pdfcrowdChatGPT.doRequest(data, title + '.pdf', cleanup);
+        pdfcrowdChatGPT.doRequest(data, addPdfExtension(title), cleanup);
     }
 
     function showButton() {
