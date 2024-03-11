@@ -122,6 +122,12 @@ pdfcrowdChatGPT.init = function() {
      background-color: rgba(0,0,0,.1);
  }
 
+ .pdfcrowd-extra-btn {
+     width: 100%;
+     text-align: start;
+     display: block;
+ }
+
  .pdfcrowd-hidden {
      display: none;
  }
@@ -296,7 +302,7 @@ pdfcrowdChatGPT.init = function() {
     </button>
 
     <div id="pdfcrowd-extra-btns" class="pdfcrowd-hidden pdfcrowd-text-left">
-        <div
+        <button
             id="pdfcrowd-extra-a4p"
             type="button"
             role="button"
@@ -305,8 +311,8 @@ pdfcrowdChatGPT.init = function() {
             data-conv-options='{"page_size": "a4"}'
             class="pdfcrowd-extra-btn pdfcrowd-convert pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
             A4 Portrait
-        </div>
-        <div
+        </button>
+        <button
             id="pdfcrowd-extra-a4l"
             type="button"
             role="button"
@@ -315,8 +321,8 @@ pdfcrowdChatGPT.init = function() {
             class="pdfcrowd-extra-btn pdfcrowd-convert pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1"
             data-conv-options='{"orientation": "landscape", "viewport_width": 1200, "page_size": "a4"}'>
             A4 Landscape
-        </div>
-        <div
+        </button>
+        <button
             id="pdfcrowd-extra-lp"
             type="button"
             role="button"
@@ -325,8 +331,8 @@ pdfcrowdChatGPT.init = function() {
             data-conv-options='{"page_size": "letter"}'
             class="pdfcrowd-extra-btn pdfcrowd-convert pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
             Letter Portrait
-        </div>
-        <div
+        </button>
+        <button
             id="pdfcrowd-extra-ll"
             type="button"
             role="button"
@@ -335,14 +341,26 @@ pdfcrowdChatGPT.init = function() {
             class="pdfcrowd-extra-btn pdfcrowd-convert pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1"
             data-conv-options='{"orientation": "landscape", "viewport_width": 1200, "page_size": "letter"}'>
             Letter Landscape
-        </div>
+        </button>
+        <button
+            id="pdfcrowd-extra-single-a4p"
+            type="button"
+            role="button"
+            tabindex="0"
+            aria-label="Save as single page"
+            data-conv-options='{"page_height": "-1"}'
+            class="pdfcrowd-extra-btn pdfcrowd-convert pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
+            Single Page
+        </button>
         <hr>
-        <div
+        <button
             id="pdfcrowd-help"
-            aria-label="Save as letter landscape PDF"
+            type="button"
+            role="button"
+            aria-label="Save ChatGPT as PDF help"
             class="pdfcrowd-extra-btn pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
             Help
-        </div>
+        </button>
     </div>
 
     <div class="pdfcrowd-overlay" id="pdfcrowd-error-overlay">
@@ -418,7 +436,7 @@ pdfcrowdChatGPT.init = function() {
 
             <div class="pdfcrowd-dialog-footer">
                 <button class="btn btn-neutral pdfcrowd-close-btn">Close</button>
-                <div class="pdfcrowd-version">v1.5</div>
+                <div class="pdfcrowd-version">v1.6</div>
             </div>
         </div>
     </div>

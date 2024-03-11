@@ -20,4 +20,6 @@ Changes in 1.5
 - Minor chat selection fix
 
 Changes in 1.6
+- Added Single Page save option
 - Avoid multiple dots before the output filename's extension
+- Fix saving the selected part by sub-button click
