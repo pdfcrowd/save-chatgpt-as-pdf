@@ -7,29 +7,10 @@ pdfcrowdChatGPT.username = 'chat-gpt';
 pdfcrowdChatGPT.apiKey = '29d211b1f6924c22b7a799b4e8fecb7e';
 
 pdfcrowdChatGPT.init = function() {
-    //const urlPattern = /^.*?:\/\/chat\.openai\.com\/((c|g|share)\/.*)?$/;
-    const urlPattern = /^.*?:\/\/chatgpt.com\/((c|g|share)\/.*)?$/;
-    let currentUrl = '';
-
-    function checkUrlChange() {
-        const newUrl = window.location.href;
-        if(currentUrl !== newUrl) {
-            currentUrl = newUrl;
-
-            const blocks = document.getElementsByClassName('pdfcrowd-block');
-            if(urlPattern.test(currentUrl)) {
-                for(let i = 0; i < blocks.length; i++) {
-                    blocks[i].classList.remove('pdfcrowd-hidden');
-                }
-            } else {
-                for(let i = 0; i < blocks.length; i++) {
-                    blocks[i].classList.add('pdfcrowd-hidden');
-                }
-            }
-        }
+    if(document.querySelectorAll('.pdfcrowd-convert').length > 0) {
+        // avoid double init
+        return;
     }
-
-    setInterval(checkUrlChange, 2000);
 
     // remote images live at least 1 minute
     const minImageDuration = 60000;
@@ -276,7 +257,7 @@ pdfcrowdChatGPT.init = function() {
  }
 </style>
 
-<div class="pdfcrowd-block pdfcrowd-text-right">
+<div class="pdfcrowd-block pdfcrowd-text-right pdfcrowd-hidden">
     <button
         id="pdfcrowd-convert-main"
         type="button"
@@ -617,18 +598,12 @@ pdfcrowdChatGPT.init = function() {
         pdfcrowdChatGPT.doRequest(data, addPdfExtension(title), cleanup);
     }
 
-    function showButton() {
-        let buttons = document.querySelectorAll('.pdfcrowd-convert');
-        if(buttons.length > 0) {
-            return;
-        }
+    function addPdfcrowdBlock() {
         const container = document.createElement('div');
         container.innerHTML = pdfcrowdBlockHtml;
         document.body.appendChild(container);
 
-        checkUrlChange();
-
-        buttons = document.querySelectorAll('.pdfcrowd-convert');
+        let buttons = document.querySelectorAll('.pdfcrowd-convert');
         buttons.forEach(element => {
             element.addEventListener('click', convert);
         });
@@ -663,26 +638,20 @@ pdfcrowdChatGPT.init = function() {
                 element.closest('.pdfcrowd-overlay').style.display = 'none';
             });
         });
+
+        return container.getElementsByClassName('pdfcrowd-block')[0];
     }
 
-    let buttonVisible = false;
-
+    const pdfcrowd_block = addPdfcrowdBlock();
     function checkForContent() {
-        if(!buttonVisible) {
-            const mainElement = document.querySelector(
-                'main > div:first-child');
-
-            if (mainElement && mainElement.textContent.trim().length > 0) {
-                buttonVisible = true;
-                showButton();
-            } else {
-                // content not found, continue checking
-                setTimeout(checkForContent, 1000);
-            }
+        if(document.querySelector('div[role="presentation"]')) {
+            pdfcrowd_block.classList.remove('pdfcrowd-hidden');
+        } else {
+            pdfcrowd_block.classList.add('pdfcrowd-hidden');
         }
     }
 
-    setTimeout(checkForContent, 1000);
+    setInterval(checkForContent, 1000);
 }
 
 pdfcrowdChatGPT.showError = function(status, text) {
