@@ -7,7 +7,8 @@ pdfcrowdChatGPT.username = 'chat-gpt';
 pdfcrowdChatGPT.apiKey = '29d211b1f6924c22b7a799b4e8fecb7e';
 
 pdfcrowdChatGPT.init = function() {
-    const urlPattern = /^.*?:\/\/chat\.openai\.com\/((c|g|share)\/.*)?$/;
+    //const urlPattern = /^.*?:\/\/chat\.openai\.com\/((c|g|share)\/.*)?$/;
+    const urlPattern = /^.*?:\/\/chatgpt.com\/((c|g|share)\/.*)?$/;
     let currentUrl = '';
 
     function checkUrlChange() {
@@ -436,7 +437,7 @@ pdfcrowdChatGPT.init = function() {
 
             <div class="pdfcrowd-dialog-footer">
                 <button class="btn btn-neutral pdfcrowd-close-btn">Close</button>
-                <div class="pdfcrowd-version">v1.6</div>
+                <div class="pdfcrowd-version">v1.7</div>
             </div>
         </div>
     </div>

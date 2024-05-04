@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Save ChatGPT as PDF",
-    "version": "1.6",
+    "version": "1.7",
     "description": "Turn your chats into neatly formatted PDF.",
     "action": {
         "default_icon": {
@@ -26,7 +26,7 @@
     },
     "content_scripts": [
         {
-            "matches": ["*://chat.openai.com/*"],
+            "matches": ["*://chatgpt.com/*"],
             "js": ["common.js", "request.js"]
         }
     ],
