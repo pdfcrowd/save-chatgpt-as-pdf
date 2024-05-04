@@ -363,7 +363,7 @@ pdfcrowdChatGPT.init = function() {
     <div class="pdfcrowd-overlay" id="pdfcrowd-help-overlay">
         <div class="pdfcrowd-dialog">
             <div class="pdfcrowd-dialog-header">
-                Save ChatGPT as PDF by PDFCrowd
+                Save ChatGPT as PDF <span style="font-size:smaller">by PDFCrowd</span>
                 <span class="pdfcrowd-close-x pdfcrowd-close-btn">&times;</span>
             </div>
             <div class="pdfcrowd-dialog-body">
@@ -399,9 +399,8 @@ pdfcrowdChatGPT.init = function() {
                     </div>
                     <ul>
                         <li>
-                            <a href="https://pdfcrowd.com/save-chatgpt-as-pdf/" target="_blank">
-                                Save ChatGPT as PDF homepage
-                            </a>
+                            Save ChatGPT as PDF
+                            <a href="https://pdfcrowd.com/save-chatgpt-as-pdf/" target="_blank">homepage</a>
                         </li>
                         <li>
                             Visit <a href="https://pdfcrowd.com/" target="_blank">PDFCrowd</a>
