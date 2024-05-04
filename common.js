@@ -2,7 +2,7 @@
 
 const pdfcrowdChatGPT = {};
 
-pdfcrowdChatGPT.pdfcrowdAPI = 'https://api.pdfcrowd.com/convert/latest/';
+pdfcrowdChatGPT.pdfcrowdAPI = 'https://api.pdfcrowd.com/convert/24.04/';
 pdfcrowdChatGPT.username = 'chat-gpt';
 pdfcrowdChatGPT.apiKey = '29d211b1f6924c22b7a799b4e8fecb7e';
 
@@ -418,7 +418,7 @@ pdfcrowdChatGPT.init = function() {
 
             <div class="pdfcrowd-dialog-footer">
                 <button class="btn btn-neutral pdfcrowd-close-btn">Close</button>
-                <div class="pdfcrowd-version">v1.7</div>
+                <div class="pdfcrowd-version">v1.8</div>
             </div>
         </div>
     </div>
@@ -647,7 +647,7 @@ pdfcrowdChatGPT.init = function() {
 
     const pdfcrowd_block = addPdfcrowdBlock();
     function checkForContent() {
-        if(document.querySelector('div[role="presentation"]')) {
+        if(document.querySelector('main div[role="presentation"]')) {
             pdfcrowd_block.classList.remove('pdfcrowd-hidden');
         } else {
             pdfcrowd_block.classList.add('pdfcrowd-hidden');
