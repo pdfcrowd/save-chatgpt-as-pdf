@@ -343,6 +343,10 @@ pdfcrowdChatGPT.init = function() {
             class="pdfcrowd-extra-btn pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
             Help
         </button>
+        <a href="https://chromewebstore.google.com/detail/save-chatgpt-as-pdf/ccjfggejcoobknjolglgmfhoeneafhhm" aria-label="Rate us"
+           class="pdfcrowd-extra-btn pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
+            Rate us
+        </a>
     </div>
 
     <div class="pdfcrowd-overlay" id="pdfcrowd-error-overlay">
