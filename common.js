@@ -16,7 +16,16 @@ pdfcrowdChatGPT.init = function() {
     const minImageDuration = 60000;
 
     const buttonIconFill = (typeof GM_xmlhttpRequest !== 'undefined')
-          ? '#A72C16' : '#EA4C3A';
+        ? '#A72C16' : '#EA4C3A';
+
+    var rateUsLink = '#';
+    if (typeof GM_info !== 'undefined') {
+        rateUsLink = 'https://greasyfork.org/en/scripts/484463-save-chatgpt-as-pdf/feedback#post-discussion';
+    } else if (navigator.userAgent.includes("Chrome")) {
+        rateUsLink = 'https://chromewebstore.google.com/detail/save-chatgpt-as-pdf/ccjfggejcoobknjolglgmfhoeneafhhm/reviews';
+    } else if (navigator.userAgent.includes("Firefox")) {
+        rateUsLink = 'https://addons.mozilla.org/en-US/firefox/addon/save-chatgpt-as-pdf/reviews/';
+    }
 
     const pdfcrowdBlockHtml = `
 <style>
@@ -377,6 +386,9 @@ pdfcrowdChatGPT.init = function() {
                     Email us at <strong>support@pdfcrowd.com</strong> or use our
                     <a href="https://pdfcrowd.com/contact/?ref=chatgpt&amp;pr=save-chatgpt-as-pdf-pdfcrowd" title="Contact us" target="_blank">
                         contact form</a>.
+                    <br>
+                    Please <a href="${rateUsLink}">rate us</a> if you like the extension. It helps a lot!
+
                 </div>
 
                 <div style="line-height: normal; margin-top:1em;">
@@ -423,7 +435,6 @@ pdfcrowdChatGPT.init = function() {
     </div>
 </div>
 `;
-
     function findRow(element) {
         while(element) {
             if(element.classList &&
