@@ -4,6 +4,7 @@
     "version": "1.9",
     "description": "Turn your chats into neatly formatted PDF.",
     "action": {
+        "default_popup": "popup.html",
         "default_icon": {
             "16": "icons/icon16.png",
             "24": "icons/icon24.png",
