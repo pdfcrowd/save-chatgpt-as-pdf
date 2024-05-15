@@ -12,7 +12,8 @@
             "48": "icons/icon48.png",
             "64": "icons/icon64.png",
             "128": "icons/icon128.png"
-        }
+        },
+        "default_popup": "popup.html"
     },
     "background": {
         "scripts": ["background.js"]
@@ -28,7 +29,7 @@
     "content_scripts": [
         {
             "matches": ["*://chatgpt.com/*"],
-            "js": ["common.js", "request.js"]
+            "js": ["shared.js", "common.js", "request.js"]
         }
     ],
   "browser_specific_settings": {

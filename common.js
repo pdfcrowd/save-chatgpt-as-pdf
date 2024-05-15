@@ -18,15 +18,6 @@ pdfcrowdChatGPT.init = function() {
     const buttonIconFill = (typeof GM_xmlhttpRequest !== 'undefined')
         ? '#A72C16' : '#EA4C3A';
 
-    var rateUsLink = '#';
-    if (typeof GM_info !== 'undefined') {
-        rateUsLink = 'https://greasyfork.org/en/scripts/484463-save-chatgpt-as-pdf/feedback#post-discussion';
-    } else if (navigator.userAgent.includes("Chrome")) {
-        rateUsLink = 'https://chromewebstore.google.com/detail/save-chatgpt-as-pdf/ccjfggejcoobknjolglgmfhoeneafhhm/reviews';
-    } else if (navigator.userAgent.includes("Firefox")) {
-        rateUsLink = 'https://addons.mozilla.org/en-US/firefox/addon/save-chatgpt-as-pdf/reviews/';
-    }
-
     const pdfcrowdBlockHtml = `
 <style>
  .pdfcrowd-block {
@@ -264,6 +255,16 @@ pdfcrowdChatGPT.init = function() {
  .pdfcrowd-h-9 {
      height: 2.25rem;
  }
+
+ .pdfcrowd-category {
+     line-height: normal;
+     margin-top: 1em;
+ }
+
+ .pdfcrowd-category-title {
+     font-size: larger;
+     font-weight: bold;
+ }
 </style>
 
 <div class="pdfcrowd-block pdfcrowd-text-right pdfcrowd-hidden">
@@ -352,6 +353,10 @@ pdfcrowdChatGPT.init = function() {
             class="pdfcrowd-extra-btn pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
             Help
         </button>
+        <a href="${pdfcrowdShared.rateUsLink}" aria-label="Rate the Extension"
+           class="pdfcrowd-extra-btn pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
+            Rate the Extension
+        </a>
     </div>
 
     <div class="pdfcrowd-overlay" id="pdfcrowd-error-overlay">
@@ -376,60 +381,12 @@ pdfcrowdChatGPT.init = function() {
                 <span class="pdfcrowd-close-x pdfcrowd-close-btn">&times;</span>
             </div>
             <div class="pdfcrowd-dialog-body">
-                <div style="font-size:larger;font-weight:bold">
-                    Support
-                </div>
-
-                <div style="line-height:1.5">
-                    Feel free to contact us with any questions or for assistance. We're always happy to help!
-                    <br>
-                    Email us at <strong>support@pdfcrowd.com</strong> or use our
-                    <a href="https://pdfcrowd.com/contact/?ref=chatgpt&amp;pr=save-chatgpt-as-pdf-pdfcrowd" title="Contact us" target="_blank">
-                        contact form</a>.
-                    <br>
-                    Please <a href="${rateUsLink}">rate us</a> if you like the extension. It helps a lot!
-
-                </div>
-
-                <div style="line-height: normal; margin-top:1em;">
-                    <div style="font-size:larger;font-weight:bold">
-                        Tips
-                    </div>
-                    <ul>
-                        <li>
-                            You can download a specific part of the chat by selecting it.
-                        </li>
-                        <li>
-                            If images are missing in the PDF, reload the page and try downloading the PDF again.
-                        </li>
-                    </ul>
-                </div>
-
-                <div style="line-height: normal; margin-top:1em;">
-                    <div style="font-size:larger;font-weight:bold">
-                        Links
-                    </div>
-                    <ul>
-                        <li>
-                            Save ChatGPT as PDF
-                            <a href="https://pdfcrowd.com/save-chatgpt-as-pdf/" target="_blank">homepage</a>
-                        </li>
-                        <li>
-                            Visit <a href="https://pdfcrowd.com/" target="_blank">PDFCrowd</a>
-                            to learn more about our tool and services.
-                        </li>
-                        <li>
-                            Discover how our
-                            <a href="https://pdfcrowd.com/api/html-to-pdf-api/" target="_blank">HTML to PDF API</a>
-                            can enhance your projects.
-                        </li>
-                    </ul>
-                </div>
+                ${pdfcrowdShared.helpContent}
             </div>
 
             <div class="pdfcrowd-dialog-footer">
                 <button class="btn btn-secondary pdfcrowd-close-btn">Close</button>
-                <div class="pdfcrowd-version">v1.9</div>
+                <div class="pdfcrowd-version">${pdfcrowdShared.version}</div>
             </div>
         </div>
     </div>

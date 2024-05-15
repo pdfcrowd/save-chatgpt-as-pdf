@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save as ChatGPT as PDF</title>
+    <script src="shared.js"></script>
+    <style>
+     * {
+         line-height: 1.35 !important;
+     }
+
+     body {
+         font-size: 10pt;
+         width: 340px;
+     }
+
+     #version {
+         font-size: .75em;
+         color: #777;
+         text-align: end;
+     }
+
+     .popup-hidden {
+         display: none !important;
+     }
+
+     ul, ol {
+         margin: 0;
+         padding-left: 1.5em;
+     }
+
+     .title {
+         font-size: 1.25em;
+         font-weight: bold;
+     }
+
+     .pdfcrowd-category {
+         margin-top: .5em;
+     }
+
+     .pdfcrowd-category-title {
+         font-size: 1.1em;
+         font-weight: bold;
+     }
+    </style>
+  </head>
+  <body>
+      <div class="title">
+          Save ChatGPT as PDF <span style="font-size: .75em">by PDFCrowd</span>
+      </div>
+      <div class="pdfcrowd-category" style="margin-bottom: .5em">
+          <div class="pdfcrowd-category-title">
+              Quick Start Guide
+          </div>
+          <ol>
+              <li>
+                  Navigate to the <a href="https://chatgpt.com/">ChatGPT</a>
+                  page and start your discussion.
+              </li>
+              <li>
+                  Click on the "Save as PDF" button to store the conversation as
+                  a PDF file.
+              </li>
+              <li>
+                  If the button is not visible, ensure you have the latest version
+                  and granted the necessary permissions for the extension.
+              </li>
+          </ol>
+      </div>
+
+      <div id="help"></div>
+      <div id="version"></div>
+      <script type="module" src="popup.js"></script>
+  </body>
+</html>

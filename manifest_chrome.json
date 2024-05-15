@@ -11,7 +11,8 @@
             "48": "icons/icon48.png",
             "64": "icons/icon64.png",
             "128": "icons/icon128.png"
-        }
+        },
+        "default_popup": "popup.html"
     },
     "background": {
         "service_worker": "background.js"
@@ -27,7 +28,7 @@
     "content_scripts": [
         {
             "matches": ["*://chatgpt.com/*"],
-            "js": ["common.js", "request.js"]
+            "js": ["shared.js", "common.js", "request.js"]
         }
     ],
     "minimum_chrome_version" : "100"
