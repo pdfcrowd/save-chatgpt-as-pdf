@@ -18,7 +18,8 @@
 
 // do not modify or delete the following line, it serves as a placeholder for
 // the common.js contents which is copied here by "make build-userscript-single-file"
-// 
+//
+// shared.js placeholder
 // common.js placeholder
 
 (function() {

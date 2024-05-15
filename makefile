@@ -1,3 +1,5 @@
+SINGLE_FILE_JS = userscript/save-chatgpt-as-pdf.all.user.js
+
 help:
 	cat makefile
 
@@ -18,8 +20,10 @@ build-chrome: copyfiles
 	cd /tmp/save-chatgpt-to-pdf/ && zip -r $(CURDIR)/save-gptchat-as-pdf-chrome.zip .
 
 build-userscript-single-file:
-	sed "/common.js placeholder/r common.js" userscript/save-chatgpt-as-pdf.user.js >  userscript/save-chatgpt-as-pdf.all.user.js
-	sed -i '/^\/\/ @require/d' userscript/save-chatgpt-as-pdf.all.user.js
+	sed "/shared.js placeholder/r shared.js" userscript/save-chatgpt-as-pdf.user.js >  $(SINGLE_FILE_JS)
+	tail -n +3 common.js > /tmp/_common_js_
+	sed -i "/common.js placeholder/r /tmp/_common_js_" $(SINGLE_FILE_JS)
+	sed -i '/^\/\/ @require/d' $(SINGLE_FILE_JS)
 
 copyfiles:
 	rm -rf /tmp/save-chatgpt-to-pdf/
