@@ -429,7 +429,7 @@ pdfcrowdChatGPT.init = function() {
 
             <div class="pdfcrowd-dialog-footer">
                 <button class="btn btn-secondary pdfcrowd-close-btn">Close</button>
-                <div class="pdfcrowd-version">v1.9</div>
+                <div class="pdfcrowd-version">v1.10</div>
             </div>
         </div>
     </div>

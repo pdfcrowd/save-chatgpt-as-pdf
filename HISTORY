@@ -1,3 +1,7 @@
+Changes in 1.10
+- Fixed: button position
+- Fixed: adjusted to the new layout
+
 Changes in 1.9
 - Fixed: button border and hover color
 - Added: `Rate us` link
