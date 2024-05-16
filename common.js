@@ -496,22 +496,22 @@ pdfcrowdChatGPT.init = function() {
         });
 
         // solve user icons
-        element.querySelectorAll('.gizmo-shadow-stroke,.gizmo-bot-avatar').forEach(icon => {
-            if(!icon.querySelector('.gizmo-shadow-stroke')) {
-                icon.classList.add('gizmo-shadow-stroke', 'chat-user-icon');
-                let parent = icon.parentNode;
-                while(parent) {
-                    const label = parent.querySelector('.font-semibold');
-                    if(label) {
-                        label.insertBefore(icon, label.firstChild);
-                        label.style.marginTop = '1.5rem';
-                        label.style.marginBottom = '.25rem';
-                        break;
-                    }
-                    parent = parent.parentNode;
-                }
-            }
-        });
+        // element.querySelectorAll('.gizmo-shadow-stroke,.gizmo-bot-avatar').forEach(icon => {
+        //     if(!icon.querySelector('.gizmo-shadow-stroke')) {
+        //         icon.classList.add('gizmo-shadow-stroke', 'chat-user-icon');
+        //         let parent = icon.parentNode;
+        //         while(parent) {
+        //             const label = parent.querySelector('.font-semibold');
+        //             if(label) {
+        //                 label.insertBefore(icon, label.firstChild);
+        //                 label.style.marginTop = '1.5rem';
+        //                 label.style.marginBottom = '.25rem';
+        //                 break;
+        //             }
+        //             parent = parent.parentNode;
+        //         }
+        //     }
+        // });
 
         // solve expired images
         element.querySelectorAll('.grid img').forEach(img => {
