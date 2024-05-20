@@ -1,3 +1,7 @@
+Changes in 1.11
+- Fixed: conversion error 456
+- Added: help when use clicks on the addon icon
+
 Changes in 1.10
 - Fixed: button position
 - Fixed: adjusted to the new layout

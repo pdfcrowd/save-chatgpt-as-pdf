@@ -2,7 +2,7 @@
 
 const pdfcrowdShared = {};
 
-pdfcrowdShared.version = 'v1.9';
+pdfcrowdShared.version = 'v1.11';
 
 pdfcrowdShared.rateUsLink = '#';
 if (typeof GM_info !== 'undefined') {
