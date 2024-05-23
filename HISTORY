@@ -1,3 +1,7 @@
+Changes in 1.12
+- Added new options: theme, exclude prompts, font size and page margins
+- Added popup menu
+
 Changes in 1.11
 - Fixed: conversion error 456
 

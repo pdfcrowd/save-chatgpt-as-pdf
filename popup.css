@@ -1,0 +1,87 @@
+/* firefox specific */
+@-moz-document url-prefix(){
+    body {
+        font-family: "Noto Sans", Arial, sans-serif;
+        font-size: 75%
+    }
+    hr {
+        border-color: #ddd;
+    }
+    .firefox-hide {
+        display: none;
+    }
+}
+
+body {
+    min-width: 200px;
+    margin-bottom: .5rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.content-wrapper {
+    margin: .5rem 0;
+}
+
+/* --------------------------------------------------------------------------- */
+/* Title */
+
+.title-wrapper {
+    position: relative;
+}
+
+.title {
+    margin-bottom: 0;
+}
+
+.title-lead {
+    margin-top: 0;
+    margin-bottom: .5rem;
+    color: #555;
+}
+
+.settings {
+    -webkit-mask: url("icons/3rd/gear.svg") no-repeat center;
+    mask: url("icons/3rd/gear.svg") no-repeat center;
+}
+
+.help {
+    -webkit-mask: url("icons/3rd/circle-question.svg") no-repeat center;
+    mask: url("icons/3rd/circle-question.svg") no-repeat center;
+}
+
+.home {
+    -webkit-mask: url("icons/3rd/pdfcrowd.svg") no-repeat center;
+    mask: url("icons/3rd/pdfcrowd.svg") no-repeat center;
+}
+
+a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.icon-link {
+    display: flex;
+    align-items: center;
+    margin-bottom: .5rem;
+}
+
+.icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: .5rem;
+    background-color: lightslategray;
+    cursor: pointer;
+}
+
+.icon-link:hover span {
+    background-color: black;
+}

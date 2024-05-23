@@ -345,6 +345,11 @@ pdfcrowdChatGPT.init = function() {
             Single Page
         </button>
         <hr>
+        <a id="pdfcrowd-options" href="#"
+           aria-label="Save ChatGPT as PDF options"
+           class="pdfcrowd-extra-btn pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
+            Options
+        </a>
         <button
             id="pdfcrowd-help"
             type="button"
@@ -477,6 +482,10 @@ pdfcrowdChatGPT.init = function() {
         return filename.replace(/\.*$/, '') + '.pdf';
     }
 
+    function isLight(body) {
+        return window.getComputedStyle(document.body).backgroundColor != 'rgb(33, 33, 33)';
+    }
+
     function convert(event) {
         let trigger = event.target;
         document.getElementById('pdfcrowd-extra-btns').classList.add(
@@ -519,7 +528,6 @@ pdfcrowdChatGPT.init = function() {
         title = title.trim();
 
         const data = {
-            text: `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body>${body}</body>`,
             jpeg_quality: 70,
             image_dpi: 150,
             convert_images_to_jpeg: 'all',
@@ -550,7 +558,32 @@ pdfcrowdChatGPT.init = function() {
             data.viewport_width = 800;
         }
 
-        pdfcrowdChatGPT.doRequest(data, addPdfExtension(title), cleanup);
+        pdfcrowdShared.getOptions(function(options) {
+            if(options.margins === 'minimal') {
+                data.no_margins = true;
+            } else {
+                data.margin_bottom = '12px';
+            }
+
+            let classes = '';
+            if(options.theme === 'dark' ||
+               (options.theme === '' && !isLight(document.body))) {
+                classes = 'pdfcrowd-dark ';
+                data.page_background_color = '333333';
+            }
+
+            if(options.zoom) {
+                data.scale_factor = options.zoom;
+            }
+
+            if(options.no_questions) {
+                classes += 'pdfcrowd-no-questions ';
+            }
+
+            data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}">${body}</body>`;
+
+            pdfcrowdChatGPT.doRequest(data, addPdfExtension(title), cleanup);
+        });
     }
 
     function addPdfcrowdBlock() {
@@ -604,6 +637,15 @@ pdfcrowdChatGPT.init = function() {
         } else {
             pdfcrowd_block.classList.add('pdfcrowd-hidden');
         }
+    }
+
+    const options_el = document.getElementById('pdfcrowd-options');
+    if(pdfcrowdShared.hasOptions) {
+        options_el.addEventListener('click', function() {
+            chrome.runtime.sendMessage({action: "open_options_page"});
+        });
+    } else {
+        options_el.remove();
     }
 
     setInterval(checkForContent, 1000);

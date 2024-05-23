@@ -2,11 +2,20 @@
 
 const pdfcrowdShared = {};
 
-pdfcrowdShared.version = 'v1.11';
+pdfcrowdShared.defaultOptions = {
+    margins: '',
+    theme: '',
+    zoom: 100,
+    no_questions: false
+}
+
+pdfcrowdShared.version = 'v1.12';
 
 pdfcrowdShared.rateUsLink = '#';
+pdfcrowdShared.hasOptions = true;
 if (typeof GM_info !== 'undefined') {
     pdfcrowdShared.rateUsLink = 'https://greasyfork.org/en/scripts/484463-save-chatgpt-as-pdf/feedback#post-discussion';
+    pdfcrowdShared.hasOptions = false;
 } else if (navigator.userAgent.includes("Chrome")) {
     pdfcrowdShared.rateUsLink = 'https://chromewebstore.google.com/detail/save-chatgpt-as-pdf/ccjfggejcoobknjolglgmfhoeneafhhm/reviews';
 } else if (navigator.userAgent.includes("Firefox")) {
@@ -41,6 +50,10 @@ pdfcrowdShared.helpContent = `
         <li>
             If images are missing in the PDF, reload the page and try downloading the PDF again.
         </li>
+        <li>
+            Customize the PDF file via addon
+            <a class="options-link">options</a>.
+        </li>
     </ul>
 </div>
 
@@ -65,3 +78,37 @@ pdfcrowdShared.helpContent = `
     </ul>
 </div>
 `;
+
+pdfcrowdShared.getOptions = function(callback) {
+    if(typeof chrome === 'undefined') {
+        callback(pdfcrowdShared.defaultOptions);
+    } else {
+        try {
+            chrome.storage.sync.get('options', function(obj) {
+                let rv = {};
+                Object.assign(rv, pdfcrowdShared.defaultOptions);
+                if(obj.options) {
+                    Object.assign(rv, obj.options);
+                }
+                callback(rv);
+            });
+        } catch(error) {
+            console.error(error);
+            callback(pdfcrowdShared.defaultOptions);
+        }
+    }
+}
+
+function init() {
+    let elem = document.getElementById('version');
+    if(elem) {
+        elem.innerHTML = pdfcrowdShared.version;
+    }
+
+    elem = document.getElementById('help');
+    if(elem) {
+        elem.innerHTML = pdfcrowdShared.helpContent;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', init);

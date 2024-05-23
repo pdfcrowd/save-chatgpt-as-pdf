@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Save ChatGPT as PDF Options</title>
+        <link rel="stylesheet" href="options.css">
+        <script src="shared.js"></script>
+    </head>
+    <body>
+        <div class="title-wrapper">
+            <img src="icons/icon64.png"></img>
+            <div>
+                <h2>Save ChatGPT as PDF</h2>
+                <div class="title-lead">
+                    by PDFCrowd
+                    <br>
+                    <div id="version"></div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="pdfcrowd-category">
+            <p class="pdfcrowd-category-title">
+                Options
+            </p>
+            <form class="options" autocomplete="off" spellcheck="false">
+              <table>
+                <tr>
+                  <td>
+                    <label for="margins">Color theme:</label>
+                  </td>
+                  <td>
+                    <select name="theme" id="theme">
+                      <option value="">Auto</option>
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                    </select>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <label for="no_questions">
+                      Exclude prompts:
+                  </td>
+                  <td>
+                    <input type="checkbox"
+                           id="no_questions" name="no_questions">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <label for="zoom">Font size (30-300%):</label>
+                  </td>
+                  <td>
+                    <input name="zoom" id="zoom"
+                           type="number" step="1" min="10" max="300" />
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <label for="margins">Page margins:</label>
+                  </td>
+                  <td>
+                    <select name="margins" id="margins">
+                      <option value="">Default</option>
+                      <option value="minimal">Minimal</option>
+                    </select>
+                  </td>
+                </tr>
+              </table>
+
+                <div class="mb-3">
+                </div>
+
+                <div>
+                    <button id="save" class="save mt-3 mr-2">Apply Changes</button>
+                    <button id="reset" class="mt-3">Reset</button>
+                    <span id="status" style="display: none">
+                        Saved
+                    </span>
+                </div>
+            </form>
+        </div>
+
+        <div style="line-height:1.5; margin-top: 2em;">
+            Feel free to contact us with any questions or for assistance. We're always happy to help!
+            <br>
+            Email us at <strong>support@pdfcrowd.com</strong> or use our
+            <a href="https://pdfcrowd.com/contact/?ref=chatgpt&amp;pr=save-chatgpt-as-pdf-pdfcrowd" title="Contact us" target="_blank">
+                contact form</a>.
+        </div>
+
+        <script type="module" src="options.js"></script>
+    </body>
+</html>

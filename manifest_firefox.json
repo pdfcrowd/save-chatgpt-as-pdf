@@ -2,7 +2,7 @@
 {
     "manifest_version": 3,
     "name": "Save ChatGPT as PDF",
-    "version": "1.11",
+    "version": "1.12",
     "description": "Turn your chats into neatly formatted PDF.",
     "action": {
         "default_icon": {
@@ -12,7 +12,8 @@
             "48": "icons/icon48.png",
             "64": "icons/icon64.png",
             "128": "icons/icon128.png"
-        }
+        },
+        "default_popup": "popup.html"
     },
     "background": {
         "scripts": ["background.js"]
@@ -31,15 +32,19 @@
             "js": ["shared.js", "common.js", "request.js"]
         }
     ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{0838ab1b-8795-4002-8da1-9d32de3c6c3b}",
-      "strict_min_version": "109.0"
+    "options_ui" : {
+        "page": "options.html",
+        "open_in_tab": true
     },
-    "gecko_android": {
-      "strict_min_version": "113.0"
-    }
-  },
-  
+    "permissions": ["storage"],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "{0838ab1b-8795-4002-8da1-9d32de3c6c3b}",
+            "strict_min_version": "109.0"
+        },
+        "gecko_android": {
+            "strict_min_version": "113.0"
+        }
+    },
     "minimum_chrome_version" : "100"
 }

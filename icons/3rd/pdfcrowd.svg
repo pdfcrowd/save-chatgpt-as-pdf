@@ -1,0 +1,8 @@
+<svg version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <g transform="matrix(.814 0 0 .991 .754 12.8)" fill="#fff" stroke="#fff" stroke-linejoin="round" stroke-width="2.88">
+    <path d="m5.41-9.77c0.253 0.0274 0.707-0.124 0.572 0.249v9.41c-0.253-0.0274-0.707 0.124-0.572-0.249z" opacity=".99"/>
+    <path d="m0.722-5.45h0.843v5.37h-0.843z" opacity=".99"/>
+    <path d="m9.92-7.82c0.215 0.0626 0.742-0.153 0.668 0.166v7.54c-0.215-0.0626-0.742 0.153-0.668-0.166z" opacity=".99"/>
+    <path d="m17.2-1.19v1.1h-2.95v-1.1z" opacity=".99"/>
+  </g>
+</svg>

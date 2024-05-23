@@ -49,3 +49,9 @@ chrome.runtime.onMessage.addListener(
         }
     }
 );
+
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.action === "open_options_page") {
+        chrome.runtime.openOptionsPage();
+    }
+});
