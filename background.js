@@ -42,7 +42,7 @@ chrome.runtime.onMessage.addListener(
                 }).catch(error => {
                     sendResponse({
                         status: error.status || 500,
-                        message: error.responseText
+                        message: error.toString()
                     });
                 });
             return true;

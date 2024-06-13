@@ -1,3 +1,6 @@
+Changes in 1.13
+- Improved error message when there is no connection to API servers
+
 Changes in 1.12
 - Added new options: theme, exclude prompts, font size and page margins
 - Added popup menu

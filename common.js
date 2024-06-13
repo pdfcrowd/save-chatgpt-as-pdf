@@ -659,13 +659,15 @@ pdfcrowdChatGPT.showError = function(status, text) {
       "Current usage is over the limit. Please wait a while before trying again.<br><br>",
     ];
   } else {
-    html = [];
-    if (status) {
-      html.push(`Code: ${status}`);
-      html.push("Please try again later");
-    } else {
+      html = [];
+      if (status) {
+          html.push(`Code: ${status}`);
+          if(status == 500) {
+              html.push('Network error, no connection to PDFCrowd API servers');
+          }
+          html.push('Please try again later');
+      }
       html.push(text);
-    }
       html.push(`If the problem persists, contact us at
             <a href="mailto:support@pdfcrowd.com?subject=ChatGPT%20error">
               support@pdfcrowd.com
