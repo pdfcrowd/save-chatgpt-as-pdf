@@ -661,13 +661,16 @@ pdfcrowdChatGPT.showError = function(status, text) {
   } else {
       html = [];
       if (status) {
-          html.push(`Code: ${status}`);
-          if(status == 500) {
-              html.push('Network error, no connection to PDFCrowd API servers');
+          if(status == 'network-error') {
+              html.push('Network error while connecting to the conversion service');
+          } else {
+              html.push(`Code: ${status}`);
           }
+          html.push(text);
           html.push('Please try again later');
+      } else {
+          html.push(text);
       }
-      html.push(text);
       html.push(`If the problem persists, contact us at
             <a href="mailto:support@pdfcrowd.com?subject=ChatGPT%20error">
               support@pdfcrowd.com

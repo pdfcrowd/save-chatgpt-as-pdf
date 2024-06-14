@@ -41,7 +41,7 @@ chrome.runtime.onMessage.addListener(
                     }
                 }).catch(error => {
                     sendResponse({
-                        status: error.status || 500,
+                        status: error.status || 'network-error',
                         message: error.toString()
                     });
                 });
