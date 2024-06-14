@@ -85,3 +85,8 @@ a:hover {
 .icon-link:hover span {
     background-color: black;
 }
+
+#warning {
+    display: none;
+    color: #444;
+}
