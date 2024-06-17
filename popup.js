@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
             origins: ['*://chatgpt.com/*']
         }).then((result) => {
             if (!result) {
-                document.getElementById('warning').style.display = 'block';
+                // does not work correctly, disabled for now
+                //document.getElementById('warning').style.display = 'block';
             }
         });
     }
