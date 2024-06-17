@@ -435,8 +435,9 @@ pdfcrowdChatGPT.init = function() {
                     newContainer.classList.add('h-full', 'w-full');
                     let currentElement = startElement;
                     while(currentElement) {
-                        newContainer.appendChild(
-                            currentElement.cloneNode(true));
+                        const child_clone = currentElement.cloneNode(true);
+                        newContainer.appendChild(child_clone);
+                        persistCanvases(currentElement, child_clone);
                         if(currentElement === endElement) {
                             break;
                         }
@@ -446,7 +447,9 @@ pdfcrowdChatGPT.init = function() {
                 }
             }
         }
-        return element.cloneNode(true);
+        const element_clone = element.cloneNode(true);
+        persistCanvases(element, element_clone);
+        return element_clone;
     }
 
     function prepareContent(element) {
@@ -484,6 +487,57 @@ pdfcrowdChatGPT.init = function() {
 
     function isLight(body) {
         return window.getComputedStyle(document.body).backgroundColor != 'rgb(33, 33, 33)';
+    }
+
+    function isElementVisible(element) {
+        const style = window.getComputedStyle(element);
+        return (
+            style.display !== 'none' &&
+                style.visibility !== 'hidden' &&
+                element.offsetWidth > 0 &&
+                element.offsetHeight > 0
+        );
+    }
+
+    function styleCanvasArea(element, stop_element) {
+        while(element) {
+            if(element == stop_element) {
+                // canvas parent area not found
+                return;
+            }
+
+            const style_height = element.style.height;
+            if(style_height &&
+               style_height !== 'auto' &&
+               style_height !== 'initial') {
+                element.style.height = '';
+                return;
+            }
+
+            element = element.parentElement;
+        }
+    }
+
+    function persistCanvases(orig_element, new_element) {
+        const items = [];
+        const orig_canvases = orig_element.querySelectorAll('canvas');
+        const new_canvases = new_element.querySelectorAll('canvas');
+        if(orig_canvases.length !== new_canvases.length) {
+            return;
+        }
+        for(let i = 0; i < orig_canvases.length; i++) {
+            const orig_canvas = orig_canvases[i];
+            if(isElementVisible(orig_canvas)) {
+                const new_canvas = new_canvases[i];
+                console.log(new_canvas);
+                const img = new_canvas.ownerDocument.createElement('img');
+                img.src = orig_canvas.toDataURL();
+                img.classList.add('pdfcrowd-canvas-img');
+                new_canvas.parentNode.replaceChild(img, new_canvas);
+
+                styleCanvasArea(img, new_element);
+            }
+        }
     }
 
     function convert(event) {

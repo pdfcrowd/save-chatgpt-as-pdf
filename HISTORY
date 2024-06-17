@@ -1,6 +1,7 @@
 Changes in 1.13
 - Improved error message when there is no connection to API servers
 - Show warning if permission for chatgpt.com is missing
+- Fix printing of new plots and tables
 
 Changes in 1.12
 - Added new options: theme, exclude prompts, font size and page margins
