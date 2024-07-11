@@ -1,3 +1,6 @@
+Changes in 1.14
+- Fixed: overlapping of a part of the Sign up button
+
 Changes in 1.13
 - Improved error message when there is no connection to API servers
 - Fix printing of new plots and tables

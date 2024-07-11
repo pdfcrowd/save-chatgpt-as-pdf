@@ -24,7 +24,7 @@ pdfcrowdChatGPT.init = function() {
      position: fixed;
      height: 36px;
      top: 10px;
-     right: 120px;
+     right: 170px;
  }
 
  @media (min-width: 768px) {
@@ -39,8 +39,7 @@ pdfcrowdChatGPT.init = function() {
 
  @media (max-width: 767px) {
      .pdfcrowd-block {
-         top: 4px;
-         right: 56px;
+         right: 100px;
      }
 
      .pdfcrowd-lg {
