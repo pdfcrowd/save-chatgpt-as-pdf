@@ -18,8 +18,8 @@ pdfcrowdChatGPT.init = function() {
     const buttonIconFill = (typeof GM_xmlhttpRequest !== 'undefined')
         ? '#A72C16' : '#EA4C3A';
 
-    const pdfcrowdBlockHtml = `
-<style>
+    const blockStyle = document.createElement('style');
+    blockStyle.textContent = `
  .pdfcrowd-block {
      position: fixed;
      height: 36px;
@@ -269,9 +269,10 @@ pdfcrowdChatGPT.init = function() {
      font-size: larger;
      font-weight: bold;
  }
-</style>
+`;
+    document.head.appendChild(blockStyle);
 
-<div class="pdfcrowd-block pdfcrowd-text-right pdfcrowd-hidden">
+    const pdfcrowdBlockHtml = `
     <button
         id="pdfcrowd-convert-main"
         type="button"
@@ -399,8 +400,8 @@ pdfcrowdChatGPT.init = function() {
             </div>
         </div>
     </div>
-</div>
 `;
+
     function findRow(element) {
         while(element) {
             if(element.classList &&
@@ -647,6 +648,8 @@ pdfcrowdChatGPT.init = function() {
     function addPdfcrowdBlock() {
         const container = document.createElement('div');
         container.innerHTML = pdfcrowdBlockHtml;
+        container.classList.add(
+            'pdfcrowd-block', 'pdfcrowd-text-right', 'pdfcrowd-hidden');
         document.body.appendChild(container);
 
         let buttons = document.querySelectorAll('.pdfcrowd-convert');
@@ -685,7 +688,7 @@ pdfcrowdChatGPT.init = function() {
             });
         });
 
-        return container.getElementsByClassName('pdfcrowd-block')[0];
+        return container;
     }
 
     function isVisible(el) {
