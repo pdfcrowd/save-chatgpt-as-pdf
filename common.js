@@ -24,7 +24,12 @@ pdfcrowdChatGPT.init = function() {
      position: fixed;
      height: 36px;
      top: 10px;
-     right: 170px;
+     right: 120px;
+ }
+
+ .pdfcrowd-block-login {
+     top: 50px;
+     right: 16px;
  }
 
  @media (min-width: 768px) {
@@ -38,8 +43,8 @@ pdfcrowdChatGPT.init = function() {
  }
 
  @media (max-width: 767px) {
-     .pdfcrowd-block {
-         right: 100px;
+     .pdfcrowd-block:not(.pdfcrowd-block-login) {
+         right: 56px;
      }
 
      .pdfcrowd-lg {
@@ -683,10 +688,23 @@ pdfcrowdChatGPT.init = function() {
         return container.getElementsByClassName('pdfcrowd-block')[0];
     }
 
+    function isVisible(el) {
+        if(el) {
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' &&
+                style.visibility !== 'hidden' &&
+                style.opacity !== '0';
+        }
+    }
+
     const pdfcrowd_block = addPdfcrowdBlock();
     function checkForContent() {
         if(document.querySelector('main div[role="presentation"]')) {
             pdfcrowd_block.classList.remove('pdfcrowd-hidden');
+            if(isVisible(
+                document.querySelector('[data-testid="login-button"]'))) {
+                pdfcrowd_block.classList.add('pdfcrowd-block-login');
+            }
         } else {
             pdfcrowd_block.classList.add('pdfcrowd-hidden');
         }
