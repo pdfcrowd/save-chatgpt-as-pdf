@@ -9,7 +9,7 @@ pdfcrowdShared.defaultOptions = {
     no_questions: false
 }
 
-pdfcrowdShared.version = 'v1.15';
+pdfcrowdShared.version = 'v1.16';
 
 pdfcrowdShared.rateUsLink = '#';
 pdfcrowdShared.hasOptions = true;

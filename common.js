@@ -704,6 +704,15 @@ pdfcrowdChatGPT.init = function() {
     function checkForContent() {
         if(document.querySelector('main div[role="presentation"]')) {
             pdfcrowd_block.classList.remove('pdfcrowd-hidden');
+            // fix conflict with other extensions which remove the button
+            if(!pdfcrowd_block.isConnected) {
+                console.warn('Extension conflict, another extension deleted PDFCrowd HTML, disable other extensions to fix it.\ncreating the Save as PDF button...');
+                document.body.appendChild(pdfcrowd_block);
+            }
+            if(!blockStyle.isConnected) {
+                console.warn('Extension conflict, another extension deleted PDFCrowd HTML, disable other extensions to fix it.\ncreating the button style...');
+                document.head.appendChild(blockStyle);
+            }
             if(isVisible(
                 document.querySelector('[data-testid="login-button"]'))) {
                 pdfcrowd_block.classList.add('pdfcrowd-block-login');

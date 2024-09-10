@@ -1,3 +1,6 @@
+Changes in 1.16
+- Fixed: show the button if there is a conflict with another extension
+
 Changes in 1.15
 - Fixed: overlapping of a part of the Sign up button
 - Reorganized: CSS and HTML code
