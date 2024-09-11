@@ -24,7 +24,7 @@ pdfcrowdChatGPT.init = function() {
      position: fixed;
      height: 36px;
      top: 10px;
-     right: 120px;
+     right: 180px;
  }
 
  .pdfcrowd-block-login {

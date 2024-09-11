@@ -1,3 +1,6 @@
+Changes in 1.17
+- Fixed: overlapping of a part of the Share button
+
 Changes in 1.16
 - Fixed: show the button if there is a conflict with another extension
 
