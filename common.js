@@ -27,6 +27,10 @@ pdfcrowdChatGPT.init = function() {
      right: 180px;
  }
 
+ .pdfcrowd-on-shared {
+     right: 30px;
+ }
+
  .pdfcrowd-block-login {
      top: 50px;
      right: 16px;
@@ -452,8 +456,15 @@ pdfcrowdChatGPT.init = function() {
                 }
             }
         }
-        const element_clone = element.cloneNode(true);
+        let element_clone = element.cloneNode(true);
         persistCanvases(element, element_clone);
+        if(element_clone.tagName.toLowerCase() !== 'main') {
+            // add main element as it's not presented in a shared chat
+            const main = document.createElement('main');
+            main.classList.add('h-full', 'w-full');
+            main.appendChild(element_clone);
+            element_clone = main;
+        }
         return element_clone;
     }
 
@@ -534,7 +545,6 @@ pdfcrowdChatGPT.init = function() {
             const orig_canvas = orig_canvases[i];
             if(isElementVisible(orig_canvas)) {
                 const new_canvas = new_canvases[i];
-                console.log(new_canvas);
                 const img = new_canvas.ownerDocument.createElement('img');
                 img.src = orig_canvas.toDataURL();
                 img.classList.add('pdfcrowd-canvas-img');
@@ -567,7 +577,8 @@ pdfcrowdChatGPT.init = function() {
             }
         }
 
-        const main = document.getElementsByTagName('main')[0];
+        let main = document.getElementsByTagName('main');
+        main = main.length ? main[0] : document.querySelector('div.grow');
         const content = prepareContent(main);
 
         let body;
@@ -650,6 +661,9 @@ pdfcrowdChatGPT.init = function() {
         container.innerHTML = pdfcrowdBlockHtml;
         container.classList.add(
             'pdfcrowd-block', 'pdfcrowd-text-right', 'pdfcrowd-hidden');
+        if(is_shared) {
+            container.classList.add('pdfcrowd-on-shared');
+        }
         document.body.appendChild(container);
 
         let buttons = document.querySelectorAll('.pdfcrowd-convert');
@@ -700,9 +714,13 @@ pdfcrowdChatGPT.init = function() {
         }
     }
 
+    const is_shared = window.location.href.startsWith(
+        "https://chatgpt.com/share/");
     const pdfcrowd_block = addPdfcrowdBlock();
+
     function checkForContent() {
-        if(document.querySelector('main div[role="presentation"]')) {
+        if(document.querySelector('main div[role="presentation"]') ||
+           (is_shared || document.querySelector('div.grow'))) {
             pdfcrowd_block.classList.remove('pdfcrowd-hidden');
             // fix conflict with other extensions which remove the button
             if(!pdfcrowd_block.isConnected) {
