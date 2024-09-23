@@ -27,10 +27,6 @@ pdfcrowdChatGPT.init = function() {
      right: 180px;
  }
 
- .pdfcrowd-on-shared {
-     right: 30px;
- }
-
  .pdfcrowd-block-login {
      top: 50px;
      right: 16px;
@@ -661,9 +657,6 @@ pdfcrowdChatGPT.init = function() {
         container.innerHTML = pdfcrowdBlockHtml;
         container.classList.add(
             'pdfcrowd-block', 'pdfcrowd-text-right', 'pdfcrowd-hidden');
-        if(is_shared) {
-            container.classList.add('pdfcrowd-on-shared');
-        }
         document.body.appendChild(container);
 
         let buttons = document.querySelectorAll('.pdfcrowd-convert');
