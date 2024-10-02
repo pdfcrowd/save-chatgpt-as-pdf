@@ -646,6 +646,12 @@ pdfcrowdChatGPT.init = function() {
                 classes += 'pdfcrowd-no-questions ';
             }
 
+            if(options.q_color === 'custom') {
+                data.data_string = JSON.stringify({
+                    q_color: options.q_color
+                });
+            }
+
             data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}">${body}</body>`;
 
             pdfcrowdChatGPT.doRequest(data, addPdfExtension(title), cleanup);
