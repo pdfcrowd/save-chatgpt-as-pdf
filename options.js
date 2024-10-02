@@ -40,6 +40,8 @@ function restoreOptions() {
             } else {
                 item.value = options[key];
             }
+            let event = new Event('change');
+            item.dispatchEvent(event);
         });
     });
 }
@@ -54,6 +56,8 @@ function resetOptions(event) {
         } else {
             item.value = options[item.name];
         }
+        let event = new Event('change');
+        item.dispatchEvent(event);
     });
 
     saveOptions(event);
@@ -62,6 +66,18 @@ function resetOptions(event) {
 function onChange() {
     document.getElementById('status').style.display = 'none';
 }
+
+function toggleColorInput() {
+    const colorInput = document.getElementById('q_color_picker_row');
+    if (this.value === 'custom') {
+        colorInput.style.display = 'table-row';
+    } else {
+        colorInput.style.display = 'none';
+    }
+}
+
+const q_color = document.getElementById('q_color');
+q_color.addEventListener('change', toggleColorInput);
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);

@@ -6,7 +6,10 @@ pdfcrowdShared.defaultOptions = {
     margins: '',
     theme: '',
     zoom: 100,
-    no_questions: false
+    no_questions: false,
+    q_color: 'default',
+    q_color_picker: '#ecf9f2',
+    title_mode: ''
 }
 
 pdfcrowdShared.version = 'v1.18';

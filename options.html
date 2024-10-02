@@ -28,7 +28,7 @@
               <table>
                 <tr>
                   <td>
-                    <label for="margins">Color theme:</label>
+                    <label for="theme">Color theme:</label>
                   </td>
                   <td>
                     <select name="theme" id="theme">
@@ -70,6 +70,47 @@
                       <option value="minimal">Minimal</option>
                     </select>
                   </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <label for="title_mode">
+                      Title mode:
+                    </label>
+                  </td>
+                  <td>
+                    <select name="title_mode" id="title_mode">
+                      <option value="">Auto</option>
+                      <option value="ask">Ask for title</option>
+                      <option value="none">No title</option>
+                    </select>
+                  </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label for="q_color">
+                            Prompt background color:
+                        </label>
+                    </td>
+                    <td>
+                        <select id="q_color" name="q_color">
+                            <option value="default">Default</option>
+                            <option value="none">None</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr id="q_color_picker_row" style="display: none">
+                    <td style="text-align: right">
+                        <label for="q_color_picker">
+                            Choose color:
+                        </label>
+                    </td>
+                    <td>
+                        <input id="q_color_picker" type="color"
+                               name="q_color_picker">
+                    </td>
                 </tr>
               </table>
 
