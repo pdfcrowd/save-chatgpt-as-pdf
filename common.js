@@ -483,7 +483,7 @@ pdfcrowdChatGPT.init = function() {
 
         element.classList.add('chat-gpt-custom');
 
-        return element.outerHTML;
+        return element;
     }
 
     function showHelp() {
@@ -552,79 +552,95 @@ pdfcrowdChatGPT.init = function() {
     }
 
     function convert(event) {
-        let trigger = event.target;
-        document.getElementById('pdfcrowd-extra-btns').classList.add(
-            'pdfcrowd-hidden');
+        pdfcrowdShared.getOptions(function(options) {
+            let trigger = event.target;
+            document.getElementById('pdfcrowd-extra-btns').classList.add(
+                'pdfcrowd-hidden');
 
-        const btnConvert = document.getElementById('pdfcrowd-convert-main');
-        btnConvert.disabled = true;
-        const spinner = document.getElementById('pdfcrowd-spinner');
-        spinner.classList.remove('pdfcrowd-hidden');
-        const btnElems = document.getElementsByClassName('pdfcrowd-btn-content');
-        for(let i = 0; i < btnElems.length; i++) {
-            btnElems[i].classList.add('pdfcrowd-invisible');
-        }
-
-        function cleanup() {
-            btnConvert.disabled = false;
-            spinner.classList.add('pdfcrowd-hidden');
+            const btnConvert = document.getElementById('pdfcrowd-convert-main');
+            btnConvert.disabled = true;
+            const spinner = document.getElementById('pdfcrowd-spinner');
+            spinner.classList.remove('pdfcrowd-hidden');
+            const btnElems = document.getElementsByClassName('pdfcrowd-btn-content');
             for(let i = 0; i < btnElems.length; i++) {
-                btnElems[i].classList.remove('pdfcrowd-invisible');
+                btnElems[i].classList.add('pdfcrowd-invisible');
             }
-        }
 
-        let main = document.getElementsByTagName('main');
-        main = main.length ? main[0] : document.querySelector('div.grow');
-        const content = prepareContent(main);
-
-        let body;
-        let title = '';
-        const h1 = main.querySelector('h1');
-        if(h1) {
-            title = h1.textContent;
-            body = content;
-        } else {
-            const chatTitle = document.querySelector(`nav a[href="${window.location.pathname}"]`);
-            title = chatTitle
-                ? chatTitle.textContent
-                : document.getElementsByTagName('title')[0].textContent;
-            body = `<h1 class="main-title">${title}</h1>` + content;
-        }
-
-        title = title.trim();
-
-        const data = {
-            jpeg_quality: 70,
-            image_dpi: 150,
-            convert_images_to_jpeg: 'all',
-            title: title,
-            rendering_mode: 'viewport',
-            smart_scaling_mode: 'viewport-fit'
-        };
-
-        if(trigger.id) {
-            localStorage.setItem('pdfcrowd-btn', trigger.id);
-        } else {
-            let lastBtn = localStorage.getItem('pdfcrowd-btn');
-            if(lastBtn) {
-                lastBtn = document.getElementById(lastBtn);
-                if(lastBtn) {
-                    trigger = lastBtn;
+            function cleanup() {
+                btnConvert.disabled = false;
+                spinner.classList.add('pdfcrowd-hidden');
+                for(let i = 0; i < btnElems.length; i++) {
+                    btnElems[i].classList.remove('pdfcrowd-invisible');
                 }
             }
-        }
 
-        const convOptions = JSON.parse(trigger.dataset.convOptions || '{}');
+            let main = document.getElementsByTagName('main');
+            main = main.length ? main[0] : document.querySelector('div.grow');
+            const main_el = prepareContent(main);
 
-        for(let key in convOptions) {
-            data[key] = convOptions[key];
-        }
+            if(options.q_color !== 'default') {
+                const questions = main_el.querySelectorAll(
+                    '[data-message-author-role="user"]');
+                const color_val = options.q_color === 'none'
+                      ? 'unset' : options.q_color_picker;
+                questions.forEach(function(question) {
+                    question.style.backgroundColor = color_val;
+                    if(color_val === 'unset') {
+                        question.style.paddingLeft = 0;
+                        question.style.paddingRight = 0;
+                    }
+                });
+            }
 
-        if(!('viewport_width' in convOptions)) {
-            data.viewport_width = 800;
-        }
+            const content = main_el.outerHTML;
 
-        pdfcrowdShared.getOptions(function(options) {
+            let body;
+            let title = '';
+            const h1 = main.querySelector('h1');
+            if(h1) {
+                title = h1.textContent;
+                body = content;
+            } else {
+                const chatTitle = document.querySelector(`nav a[href="${window.location.pathname}"]`);
+                title = chatTitle
+                    ? chatTitle.textContent
+                    : document.getElementsByTagName('title')[0].textContent;
+                body = `<h1 class="main-title">${title}</h1>` + content;
+            }
+
+            title = title.trim();
+
+            const data = {
+                jpeg_quality: 70,
+                image_dpi: 150,
+                convert_images_to_jpeg: 'all',
+                title: title,
+                rendering_mode: 'viewport',
+                smart_scaling_mode: 'viewport-fit'
+            };
+
+            if(trigger.id) {
+                localStorage.setItem('pdfcrowd-btn', trigger.id);
+            } else {
+                let lastBtn = localStorage.getItem('pdfcrowd-btn');
+                if(lastBtn) {
+                    lastBtn = document.getElementById(lastBtn);
+                    if(lastBtn) {
+                        trigger = lastBtn;
+                    }
+                }
+            }
+
+            const convOptions = JSON.parse(trigger.dataset.convOptions || '{}');
+
+            for(let key in convOptions) {
+                data[key] = convOptions[key];
+            }
+
+            if(!('viewport_width' in convOptions)) {
+                data.viewport_width = 800;
+            }
+
             if(options.margins === 'minimal') {
                 data.no_margins = true;
             } else {
@@ -644,12 +660,6 @@ pdfcrowdChatGPT.init = function() {
 
             if(options.no_questions) {
                 classes += 'pdfcrowd-no-questions ';
-            }
-
-            if(options.q_color === 'custom') {
-                data.data_string = JSON.stringify({
-                    q_color: options.q_color
-                });
             }
 
             data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}">${body}</body>`;
