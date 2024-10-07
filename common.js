@@ -260,6 +260,19 @@ pdfcrowdChatGPT.init = function() {
      height: 2.25rem;
  }
 
+ #pdfcrowd-title {
+     margin-top: 1em !important;
+     margin-bottom: .5em !important;
+     padding: .5em !important;
+     border: revert !important;
+     visibility: revert !important;
+     display: revert !important;
+     color: revert !important;
+     background: revert !important;
+     width: 360px;
+     border-radius: 5px;
+ }
+
  .pdfcrowd-category {
      line-height: normal;
      margin-top: 1em;
@@ -380,6 +393,28 @@ pdfcrowdChatGPT.init = function() {
             </div>
             <div class="pdfcrowd-dialog-footer">
                 <button class="btn btn-secondary pdfcrowd-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="pdfcrowd-overlay" id="pdfcrowd-title-overlay">
+        <div class="pdfcrowd-dialog">
+            <div class="pdfcrowd-dialog-header">
+                Enter title
+                <span class="pdfcrowd-close-x pdfcrowd-close-btn">&times;</span>
+            </div>
+            <div class="pdfcrowd-dialog-body" style="text-align: center;">
+                <input id="pdfcrowd-title" name="pdfcrowd-title-ch" autocomplete="off" autocapitalize="off">
+            </div>
+            <div class="pdfcrowd-dialog-footer">
+                <button id="pdfcrowd-title-convert" class="btn btn-secondary"
+                    style="margin-right: .5em">
+                    Convert
+                </button>
+                <button class="btn btn-secondary pdfcrowd-close-btn"
+                    style="margin-left: .5em">
+                    Cancel
+                </button>
             </div>
         </div>
     </div>
@@ -551,35 +586,30 @@ pdfcrowdChatGPT.init = function() {
         }
     }
 
+    function getTitle(main) {
+        const h1 = main.querySelector('h1');
+        let title;
+        if(h1) {
+            title = h1.textContent;
+        } else {
+            const chatTitle = document.querySelector(
+                `nav a[href="${window.location.pathname}"]`);
+            title = chatTitle
+                ? chatTitle.textContent
+                : document.getElementsByTagName('title')[0].textContent;
+        }
+        return title.trim();
+    }
+
     function convert(event) {
         pdfcrowdShared.getOptions(function(options) {
-            let trigger = event.target;
-            document.getElementById('pdfcrowd-extra-btns').classList.add(
-                'pdfcrowd-hidden');
-
-            const btnConvert = document.getElementById('pdfcrowd-convert-main');
-            btnConvert.disabled = true;
-            const spinner = document.getElementById('pdfcrowd-spinner');
-            spinner.classList.remove('pdfcrowd-hidden');
-            const btnElems = document.getElementsByClassName('pdfcrowd-btn-content');
-            for(let i = 0; i < btnElems.length; i++) {
-                btnElems[i].classList.add('pdfcrowd-invisible');
-            }
-
-            function cleanup() {
-                btnConvert.disabled = false;
-                spinner.classList.add('pdfcrowd-hidden');
-                for(let i = 0; i < btnElems.length; i++) {
-                    btnElems[i].classList.remove('pdfcrowd-invisible');
-                }
-            }
-
             let main = document.getElementsByTagName('main');
             main = main.length ? main[0] : document.querySelector('div.grow');
-            const main_el = prepareContent(main);
+            const main_clone = prepareContent(main);
+            const h1 = main_clone.querySelector('h1');
 
             if(options.q_color !== 'default') {
-                const questions = main_el.querySelectorAll(
+                const questions = main_clone.querySelectorAll(
                     '[data-message-author-role="user"]');
                 const color_val = options.q_color === 'none'
                       ? 'unset' : options.q_color_picker;
@@ -592,79 +622,128 @@ pdfcrowdChatGPT.init = function() {
                 });
             }
 
-            const content = main_el.outerHTML;
+            let title = getTitle(main);
+            let filename = title;
 
-            let body;
-            let title = '';
-            const h1 = main.querySelector('h1');
-            if(h1) {
-                title = h1.textContent;
-                body = content;
-            } else {
-                const chatTitle = document.querySelector(`nav a[href="${window.location.pathname}"]`);
-                title = chatTitle
-                    ? chatTitle.textContent
-                    : document.getElementsByTagName('title')[0].textContent;
-                body = `<h1 class="main-title">${title}</h1>` + content;
-            }
+            function doConvert() {
+                let trigger = event.target;
+                document.getElementById('pdfcrowd-extra-btns').classList.add(
+                    'pdfcrowd-hidden');
 
-            title = title.trim();
+                const btnConvert = document.getElementById(
+                    'pdfcrowd-convert-main');
+                btnConvert.disabled = true;
+                const spinner = document.getElementById('pdfcrowd-spinner');
+                spinner.classList.remove('pdfcrowd-hidden');
+                const btnElems = document.getElementsByClassName(
+                    'pdfcrowd-btn-content');
+                for(let i = 0; i < btnElems.length; i++) {
+                    btnElems[i].classList.add('pdfcrowd-invisible');
+                }
 
-            const data = {
-                jpeg_quality: 70,
-                image_dpi: 150,
-                convert_images_to_jpeg: 'all',
-                title: title,
-                rendering_mode: 'viewport',
-                smart_scaling_mode: 'viewport-fit'
-            };
-
-            if(trigger.id) {
-                localStorage.setItem('pdfcrowd-btn', trigger.id);
-            } else {
-                let lastBtn = localStorage.getItem('pdfcrowd-btn');
-                if(lastBtn) {
-                    lastBtn = document.getElementById(lastBtn);
-                    if(lastBtn) {
-                        trigger = lastBtn;
+                function cleanup() {
+                    btnConvert.disabled = false;
+                    spinner.classList.add('pdfcrowd-hidden');
+                    for(let i = 0; i < btnElems.length; i++) {
+                        btnElems[i].classList.remove('pdfcrowd-invisible');
                     }
                 }
+
+                const h1_style = options.selection_title_mode === 'none'
+                      ? 'hidden' : '';
+                let body;
+                if(h1) {
+                    if(h1_style) {
+                        h1.classList.add(h1_style);
+                    }
+                    body = main_clone.outerHTML;
+                } else {
+                    body = `<h1 class="main-title ${h1_style}">${title}</h1>`
+                        + main_clone.outerHTML;
+                }
+
+                const data = {
+                    jpeg_quality: 70,
+                    image_dpi: 150,
+                    convert_images_to_jpeg: 'all',
+                    title: title,
+                    rendering_mode: 'viewport',
+                    smart_scaling_mode: 'viewport-fit'
+                };
+
+                if(trigger.id) {
+                    localStorage.setItem('pdfcrowd-btn', trigger.id);
+                } else {
+                    let lastBtn = localStorage.getItem('pdfcrowd-btn');
+                    if(lastBtn) {
+                        lastBtn = document.getElementById(lastBtn);
+                        if(lastBtn) {
+                            trigger = lastBtn;
+                        }
+                    }
+                }
+
+                const convOptions = JSON.parse(
+                    trigger.dataset.convOptions || '{}');
+
+                for(let key in convOptions) {
+                    data[key] = convOptions[key];
+                }
+
+                if(!('viewport_width' in convOptions)) {
+                    data.viewport_width = 800;
+                }
+
+                if(options.margins === 'minimal') {
+                    data.no_margins = true;
+                } else {
+                    data.margin_bottom = '12px';
+                }
+
+                let classes = '';
+                if(options.theme === 'dark' ||
+                   (options.theme === '' && !isLight(document.body))) {
+                    classes = 'pdfcrowd-dark ';
+                    data.page_background_color = '333333';
+                }
+
+                if(options.zoom) {
+                    data.scale_factor = options.zoom;
+                }
+
+                if(options.no_questions) {
+                    classes += 'pdfcrowd-no-questions ';
+                }
+
+                data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}">${body}</body>`;
+
+                pdfcrowdChatGPT.doRequest(
+                    data, addPdfExtension(filename), cleanup);
             }
 
-            const convOptions = JSON.parse(trigger.dataset.convOptions || '{}');
-
-            for(let key in convOptions) {
-                data[key] = convOptions[key];
-            }
-
-            if(!('viewport_width' in convOptions)) {
-                data.viewport_width = 800;
-            }
-
-            if(options.margins === 'minimal') {
-                data.no_margins = true;
+            if(options.selection_title_mode === 'ask') {
+                const dlgTitle = document.getElementById(
+                    'pdfcrowd-title-overlay');
+                const titleInput = document.getElementById('pdfcrowd-title');
+                titleInput.value = title;
+                dlgTitle.style.display = 'flex';
+                titleInput.focus();
+                document.getElementById('pdfcrowd-title-convert')
+                    .onclick = function() {
+                        dlgTitle.style.display = 'none';
+                        title = titleInput.value.trim();
+                        if(title) {
+                            filename = title;
+                        }
+                        // replace h1 if presented is the converted content
+                        if(h1) {
+                            h1.innerText = title;
+                        }
+                        doConvert();
+                    };
             } else {
-                data.margin_bottom = '12px';
+                doConvert();
             }
-
-            let classes = '';
-            if(options.theme === 'dark' ||
-               (options.theme === '' && !isLight(document.body))) {
-                classes = 'pdfcrowd-dark ';
-                data.page_background_color = '333333';
-            }
-
-            if(options.zoom) {
-                data.scale_factor = options.zoom;
-            }
-
-            if(options.no_questions) {
-                classes += 'pdfcrowd-no-questions ';
-            }
-
-            data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}">${body}</body>`;
-
-            pdfcrowdChatGPT.doRequest(data, addPdfExtension(title), cleanup);
         });
     }
 
