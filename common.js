@@ -649,7 +649,7 @@ pdfcrowdChatGPT.init = function() {
                     }
                 }
 
-                const h1_style = options.selection_title_mode === 'none'
+                const h1_style = options.title_mode === 'none'
                       ? 'hidden' : '';
                 let body;
                 if(h1) {
@@ -721,7 +721,7 @@ pdfcrowdChatGPT.init = function() {
                     data, addPdfExtension(filename), cleanup);
             }
 
-            if(options.selection_title_mode === 'ask') {
+            if(options.title_mode === 'ask') {
                 const dlgTitle = document.getElementById(
                     'pdfcrowd-title-overlay');
                 const titleInput = document.getElementById('pdfcrowd-title');

@@ -9,7 +9,7 @@ pdfcrowdShared.defaultOptions = {
     no_questions: false,
     q_color: 'default',
     q_color_picker: '#ecf9f2',
-    selection_title_mode: ''
+    title_mode: ''
 }
 
 pdfcrowdShared.version = 'v1.18';
