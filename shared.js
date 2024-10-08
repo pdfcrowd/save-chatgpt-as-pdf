@@ -12,7 +12,7 @@ pdfcrowdShared.defaultOptions = {
     title_mode: ''
 }
 
-pdfcrowdShared.version = 'v1.18';
+pdfcrowdShared.version = 'v1.19';
 
 pdfcrowdShared.rateUsLink = '#';
 pdfcrowdShared.hasOptions = true;

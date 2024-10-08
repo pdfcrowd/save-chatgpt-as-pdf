@@ -1,3 +1,7 @@
+Changes in 1.19
+- Added: option for no background color or a custom background color for prompts
+- Added: option to define a custom title
+
 Changes in 1.18
 - Fixed: appearance of the button on shared chats
 
