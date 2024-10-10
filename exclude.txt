@@ -6,3 +6,5 @@ manifest*
 exclude.txt
 userscript*
 tools
+images
+
