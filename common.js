@@ -27,26 +27,7 @@ pdfcrowdChatGPT.init = function() {
      right: 180px;
  }
 
- .pdfcrowd-block-login {
-     top: 50px;
-     right: 16px;
- }
-
- @media (min-width: 768px) {
-     .pdfcrowd-lg {
-         display: block;
-     }
-
-     .pdfcrowd-sm {
-         display: none;
-     }
- }
-
  @media (max-width: 767px) {
-     .pdfcrowd-block:not(.pdfcrowd-block-login) {
-         right: 56px;
-     }
-
      .pdfcrowd-lg {
          display: none;
      }
@@ -54,6 +35,26 @@ pdfcrowdChatGPT.init = function() {
      .pdfcrowd-sm {
          display: block;
      }
+ }
+
+ .pdfcrowd-lg {
+     display: block;
+ }
+
+ .pdfcrowd-sm {
+     display: none;
+ }
+
+ .pdfcrowd-btn-smaller .pdfcrowd-lg {
+     display: none;
+ }
+
+ .pdfcrowd-btn-smaller .pdfcrowd-sm {
+     display: block;
+ }
+
+ .pdfcrowd-btn-smallest .pdfcrowd-lg, .pdfcrowd-btn-smallest .pdfcrowd-sm {
+     display: none;
  }
 
  svg.pdfcrowd-btn-content {
@@ -802,13 +803,99 @@ pdfcrowdChatGPT.init = function() {
         }
     }
 
+    function areElementsColliding(element1, element2) {
+        const rect1 = element1.getBoundingClientRect();
+        const rect2 = element2.getBoundingClientRect();
+
+        return !(
+            rect1.right < rect2.left ||
+                rect1.left > rect2.right ||
+                rect1.bottom < rect2.top ||
+                rect1.top > rect2.bottom
+        );
+    }
+
     const is_shared = window.location.href.startsWith(
         "https://chatgpt.com/share/");
     const pdfcrowd_block = addPdfcrowdBlock();
 
+    const BUTTON_MARGIN = 8;
+    const WIDTHS = [{
+        width: 135,
+        cls: null
+    }, {
+        width: 85,
+        cls: 'pdfcrowd-btn-smaller'
+    }, {
+        width: 58,
+        cls: 'pdfcrowd-btn-smallest'
+    }];
+
+    function getNewPos(elements) {
+
+        for(let i = elements.length - 1; i > 0; i--) {
+            const rect1 = elements[i - 1].getBoundingClientRect();
+            const rect2 = elements[i].getBoundingClientRect();
+
+            // Calculate horizontal space between the two elements
+            const space = rect2.left - (rect1.left + rect1.width);
+
+            for(let j = 0; j < WIDTHS.length; j++) {
+                const width = WIDTHS[j];
+                if(space >= width.width) {
+                    return [rect2.left, width.cls];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function getTopBar() {
+        const elements = document.querySelectorAll('.draggable.sticky.top-0');
+        for(let element of elements) {
+            if(isVisible(element)) {
+                return element;
+            }
+        }
+
+        return null;
+    }
+
+    let prevClass = null;
+
+    function changeButtonPosition() {
+        const topBar = getTopBar();
+        if(topBar) {
+            // find button position not overlapping anything
+            const newPos = getNewPos(topBar.querySelectorAll(':scope > div'));
+            if(newPos) {
+                const newPosStr = Math.round(
+                    window.innerWidth - newPos[0] + BUTTON_MARGIN) + 'px';
+                const newClass = newPos[1];
+                if(newPosStr !== pdfcrowd_block.style.right ||
+                   prevClass !== newClass) {
+                    pdfcrowd_block.style.right = newPosStr;
+                    prevClass = newClass;
+                    pdfcrowd_block.classList.remove(
+                        'pdfcrowd-btn-smaller', 'pdfcrowd-btn-smallest');
+                    if(newClass) {
+                        pdfcrowd_block.classList.add(newClass);
+                    }
+                }
+                return;
+            }
+        }
+        pdfcrowd_block.classList.remove(
+            'pdfcrowd-btn-smaller', 'pdfcrowd-btn-smallest');
+        prevClass = null;
+    }
+
     function checkForContent() {
         if(document.querySelector('main div[role="presentation"]') ||
            (is_shared || document.querySelector('div.grow'))) {
+            changeButtonPosition();
+
             pdfcrowd_block.classList.remove('pdfcrowd-hidden');
             // fix conflict with other extensions which remove the button
             if(!pdfcrowd_block.isConnected) {
@@ -818,10 +905,6 @@ pdfcrowdChatGPT.init = function() {
             if(!blockStyle.isConnected) {
                 console.warn('Extension conflict, another extension deleted PDFCrowd HTML, disable other extensions to fix it.\ncreating the button style...');
                 document.head.appendChild(blockStyle);
-            }
-            if(isVisible(
-                document.querySelector('[data-testid="login-button"]'))) {
-                pdfcrowd_block.classList.add('pdfcrowd-block-login');
             }
         } else {
             pdfcrowd_block.classList.add('pdfcrowd-hidden');
