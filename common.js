@@ -725,17 +725,30 @@ pdfcrowdChatGPT.init = function() {
                     });
                 }
 
+                if(options.toc) {
+                    const toc_title = '';
+                    data.on_load_javascript = `
+libPdfcrowd.insertTableOfContents({
+    selectors: '[data-message-author-role="user"]',
+    target: '#pdfcrowd-toc',
+    pageBreak: 'after',
+    title: '${toc_title}',
+    style: 'margin-top: 2em'
+});`;
+                }
+
                 const h1_style = options.title_mode === 'none' ? 'hidden' : '';
+                const toc = '<div id="pdfcrowd-toc"></div>';
 
                 let body;
                 if(h1) {
                     if(h1_style) {
                         h1.classList.add(h1_style);
                     }
-                    body = main_clone.outerHTML;
+                    body = toc + main_clone.outerHTML;
                 } else {
                     body = `<h1 class="main-title ${h1_style}">${title}</h1>`
-                        + main_clone.outerHTML;
+                        + toc + main_clone.outerHTML;
                 }
 
                 data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}">${body}</body>`;
