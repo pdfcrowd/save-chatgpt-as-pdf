@@ -9,7 +9,11 @@ pdfcrowdShared.defaultOptions = {
     no_questions: false,
     q_color: 'default',
     q_color_picker: '#ecf9f2',
-    title_mode: ''
+    title_mode: '',
+    margin_left: '0.4in',
+    margin_right: '0.4in',
+    margin_top: '0.4in',
+    margin_bottom: '0.4in'
 }
 
 pdfcrowdShared.version = 'v1.20';

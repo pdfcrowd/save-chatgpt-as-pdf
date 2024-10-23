@@ -76,8 +76,23 @@ function toggleColorInput() {
     }
 }
 
-const q_color = document.getElementById('q_color');
-q_color.addEventListener('change', toggleColorInput);
+function toggleMargins() {
+    const sub_margins = document.querySelectorAll('.sub-margin');
+    if (this.value === 'custom') {
+        sub_margins.forEach(function(element) {
+            element.style.display = 'table-row';
+        });
+    } else {
+        sub_margins.forEach(function(element) {
+            element.style.display = 'none';
+        });
+    }
+}
+
+document.getElementById('q_color').addEventListener(
+    'change', toggleColorInput);
+document.getElementById('margins').addEventListener(
+    'change', toggleMargins);
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);

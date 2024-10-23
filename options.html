@@ -1,140 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Save ChatGPT as PDF Options</title>
-        <link rel="stylesheet" href="options.css">
-        <script src="shared.js"></script>
-    </head>
-    <body>
-        <div class="title-wrapper">
-            <img src="icons/icon64.png"></img>
-            <div>
-                <h2>Save ChatGPT as PDF</h2>
-                <div class="title-lead">
-                    by PDFCrowd
-                    <br>
-                    <div id="version"></div>
-                </div>
-            </div>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Options page for saving ChatGPT conversations as PDF via PDFCrowd">
+    <title>Save ChatGPT as PDF Options</title>
+    <link rel="stylesheet" href="options.css">
+    <script src="shared.js"></script>
+  </head>
+  <body>
+    <header class="title-wrapper" role="banner">
+      <img src="icons/icon64.png" alt="PDFCrowd logo" aria-hidden="true">
+      <div>
+        <h1>Save ChatGPT as PDF</h1>
+        <div class="title-lead">
+          by PDFCrowd
+          <br>
+          <span id="version" aria-live="polite"></span>
         </div>
+      </div>
+    </header>
 
-        <hr>
+    <hr>
 
-        <div class="pdfcrowd-category">
-            <p class="pdfcrowd-category-title">
-                Options
-            </p>
-            <form class="options" autocomplete="off" spellcheck="false">
-              <table>
-                <tr>
-                  <td>
-                    <label for="theme">Color theme:</label>
-                  </td>
-                  <td>
-                    <select name="theme" id="theme">
-                      <option value="">Auto</option>
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
-                    </select>
-                  </td>
-                </tr>
+    <main>
+      <section class="pdfcrowd-category" role="form">
+        <h2 id="options-title" class="pdfcrowd-category-title">Options</h2>
+        <form class="options" aria-labelledby="options-title" autocomplete="off" spellcheck="false">
+          <table role="presentation">
+            <tr>
+              <th scope="row">
+                <label for="theme">Color theme:</label>
+              </th>
+              <td>
+                <select name="theme" id="theme" aria-label="Select color theme">
+                  <option value="">Auto</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </td>
+            </tr>
 
-                <tr>
-                  <td>
-                    <label for="no_questions">
-                      Exclude prompts:
-                  </td>
-                  <td>
-                    <input type="checkbox"
-                           id="no_questions" name="no_questions">
-                  </td>
-                </tr>
+            <tr>
+              <th scope="row">
+                <label for="no_questions">Exclude prompts:</label>
+              </th>
+              <td>
+                <input type="checkbox"
+                       id="no_questions" name="no_questions"
+                       aria-label="Exclude ChatGPT prompts from PDF">
+              </td>
+            </tr>
 
-                <tr>
-                  <td>
-                    <label for="zoom">Font size (30-300%):</label>
-                  </td>
-                  <td>
-                    <input name="zoom" id="zoom"
-                           type="number" step="1" min="10" max="300" />
-                  </td>
-                </tr>
+            <tr>
+              <th scope="row">
+                <label for="zoom">Font size (30-300%):</label>
+              </th>
+              <td>
+                <input name="zoom" id="zoom"
+                       type="number" step="1" min="10" max="300"
+                       aria-label="Set font size percentage">
+              </td>
+            </tr>
 
-                <tr>
-                  <td>
-                    <label for="margins">Page margins:</label>
-                  </td>
-                  <td>
-                    <select name="margins" id="margins">
-                      <option value="">Default</option>
-                      <option value="minimal">Minimal</option>
-                    </select>
-                  </td>
-                </tr>
+            <tr>
+              <th scope="row">
+                <label for="margins">Page margins:</label>
+              </th>
+              <td>
+                <select name="margins" id="margins"
+                        aria-label="Select page margins">
+                  <option value="">Default</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </td>
+            </tr>
 
-                <tr>
-                  <td>
-                    <label for="title_mode">
-                      Title mode:
-                    </label>
-                  </td>
-                  <td>
-                    <select name="title_mode" id="title_mode">
-                      <option value="">Auto</option>
-                      <option value="ask">Ask for title</option>
-                      <option value="none">No title</option>
-                    </select>
-                  </td>
-                </tr>
+            <tr class="sub-option sub-margin">
+              <th scope="row">
+                <label for="margin_top">Top margin:</label>
+              </th>
+              <td>
+                <input type="text"
+                       name="margin_top"
+                       id="margin_top"
+                       aria-label="Specify top margin (e.g., 0, 10px, 2cm)"
+                       title="Accepted units: in, px, cm, mm, pt"
+                       pattern="((\d+(\.\d*)?)|((\d*\.)?\d+))\s*(in|cm|mm|px|pt|)">
+              </td>
+            </tr>
 
-                <tr>
-                    <td>
-                        <label for="q_color">
-                            Prompt background color:
-                        </label>
-                    </td>
-                    <td>
-                        <select id="q_color" name="q_color">
-                            <option value="default">Default</option>
-                            <option value="none">None</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr id="q_color_picker_row" style="display: none">
-                    <td style="text-align: right">
-                        <label for="q_color_picker">
-                            Choose color:
-                        </label>
-                    </td>
-                    <td>
-                        <input id="q_color_picker" type="color"
-                               name="q_color_picker">
-                    </td>
-                </tr>
-              </table>
+            <tr class="sub-option sub-margin">
+              <th scope="row">
+                <label for="margin_bottom">Bottom margin:</label>
+              </th>
+              <td>
+                <input type="text"
+                       name="margin_bottom"
+                       id="margin_bottom"
+                       aria-label="Specify bottom margin (e.g., 0, 10px, 2cm)"
+                       title="Accepted units: in, px, cm, mm, pt"
+                       pattern="((\d+(\.\d*)?)|((\d*\.)?\d+))\s*(in|cm|mm|px|pt|)">
+              </td>
+            </tr>
 
-                <div class="mb-3">
-                </div>
+            <tr class="sub-option sub-margin">
+              <th scope="row">
+                <label for="margin_left">Left margin:</label>
+              </th>
+              <td>
+                <input type="text"
+                       name="margin_left"
+                       id="margin_left"
+                       aria-label="Specify left margin (e.g., 0, 10px, 2cm)"
+                       title="Accepted units: in, px, cm, mm, pt"
+                       pattern="((\d+(\.\d*)?)|((\d*\.)?\d+))\s*(in|cm|mm|px|pt|)">
+              </td>
+            </tr>
 
-                <div>
-                    <button id="save" class="save mt-3 mr-2">Apply Changes</button>
-                    <button id="reset" class="mt-3">Reset</button>
-                    <span id="status" style="display: none">
-                        Saved
-                    </span>
-                </div>
-            </form>
-        </div>
+            <tr class="sub-option sub-margin">
+              <th scope="row">
+                <label for="margin_right">Right margin:</label>
+              </th>
+              <td>
+                <input type="text"
+                       name="margin_right"
+                       id="margin_right"
+                       aria-label="Specify right margin (e.g., 0, 10px, 2cm)"
+                       title="Accepted units: in, px, cm, mm, pt"
+                       pattern="((\d+(\.\d*)?)|((\d*\.)?\d+))\s*(in|cm|mm|px|pt|)">
+              </td>
+            </tr>
 
-        <div style="line-height:1.5; margin-top: 2em;">
-            Feel free to contact us with any questions or for assistance. We're always happy to help!
-            <br>
-            Email us at <strong>support@pdfcrowd.com</strong> or use our
-            <a href="https://pdfcrowd.com/contact/?ref=chatgpt&amp;pr=save-chatgpt-as-pdf-pdfcrowd" title="Contact us" target="_blank">
-                contact form</a>.
-        </div>
+            <tr>
+              <th scope="row">
+                <label for="title_mode">Title mode:</label>
+              </th>
+              <td>
+                <select name="title_mode" id="title_mode"
+                        aria-label="Set title display mode">
+                  <option value="">Auto</option>
+                  <option value="ask">Ask for title</option>
+                  <option value="none">No title</option>
+                </select>
+              </td>
+            </tr>
 
-        <script type="module" src="options.js"></script>
-    </body>
+            <tr>
+              <th scope="row">
+                <label for="q_color">Prompt background color:</label>
+              </th>
+              <td>
+                <select id="q_color" name="q_color"
+                        aria-label="Choose prompt background color">
+                  <option value="default">Default</option>
+                  <option value="none">None</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </td>
+            </tr>
+
+            <tr id="q_color_picker_row" class="sub-option">
+              <th scope="row">
+                <label for="q_color_picker">Choose color:</label>
+              </th>
+              <td>
+                <input id="q_color_picker" type="color"
+                       name="q_color_picker"
+                       aria-label="Pick custom prompt background color">
+              </td>
+            </tr>
+          </table>
+
+          <div class="mb-3"></div>
+
+          <div>
+            <button id="save" class="save mt-3 mr-2" aria-label="Apply changes to PDF options">Apply Changes</button>
+            <button id="reset" class="mt-3" aria-label="Reset PDF options to default">Reset</button>
+            <span id="status" style="display: none" aria-live="assertive">
+              Saved
+            </span>
+          </div>
+        </form>
+      </section>
+
+      <footer style="line-height: 1.5; margin-top: 2em;">
+        <p>
+          Feel free to contact us with any questions or for assistance. We're always happy to help!
+          <br>
+          Email us at <strong>support@pdfcrowd.com</strong> or use our
+          <a href="https://pdfcrowd.com/contact/?ref=chatgpt&pr=save-chatgpt-as-pdf-pdfcrowd" title="Contact us" target="_blank">
+            contact form</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
 </html>

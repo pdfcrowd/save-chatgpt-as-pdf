@@ -91,12 +91,32 @@ form.options table {
     border-collapse: collapse;
 }
 
-form.options td {
+form.options td, form.options th {
     padding: .15rem .25rem;
+}
+
+form.options th {
+    font-weight: normal;
+    text-align: left;
 }
 
 form.options select {
     min-width: 90px;
 }
 
+.sub-option {
+    display: none;
+}
+
+.sub-option th {
+    text-align: right !important;
+}
+
+.sub-margin input {
+    width: 4rem;
+}
+
+h1 {
+    margin: 0;
+}
 

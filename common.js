@@ -695,9 +695,17 @@ pdfcrowdChatGPT.init = function() {
                     data.viewport_width = 800;
                 }
 
-                if(options.margins === 'minimal') {
+                switch(options.margins) {
+                case 'minimal':
                     data.no_margins = true;
-                } else {
+                    break;
+                case 'custom':
+                    data.margin_left = options.margin_left || 0;
+                    data.margin_right = options.margin_right || 0;
+                    data.margin_top = options.margin_top || 0;
+                    data.margin_bottom = options.margin_bottom || 0;
+                    break;
+                default:
                     data.margin_bottom = '12px';
                 }
 
