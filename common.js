@@ -650,19 +650,6 @@ pdfcrowdChatGPT.init = function() {
                     }
                 }
 
-                const h1_style = options.title_mode === 'none'
-                      ? 'hidden' : '';
-                let body;
-                if(h1) {
-                    if(h1_style) {
-                        h1.classList.add(h1_style);
-                    }
-                    body = main_clone.outerHTML;
-                } else {
-                    body = `<h1 class="main-title ${h1_style}">${title}</h1>`
-                        + main_clone.outerHTML;
-                }
-
                 const data = {
                     jpeg_quality: 70,
                     image_dpi: 150,
@@ -720,8 +707,35 @@ pdfcrowdChatGPT.init = function() {
                     data.scale_factor = options.zoom;
                 }
 
+                let break_selector;
                 if(options.no_questions) {
                     classes += 'pdfcrowd-no-questions ';
+                    break_selector = '.gizmo-bot-avatar';
+                } else {
+                    break_selector = '[data-message-author-role="user"]';
+                }
+
+                if(options.page_break === 'after') {
+                    const break_elems = main_clone.querySelectorAll(
+                        break_selector);
+                    break_elems.forEach((element, index) => {
+                        if(index !== 0) {
+                            element.style.pageBreakBefore = 'always';
+                        }
+                    });
+                }
+
+                const h1_style = options.title_mode === 'none' ? 'hidden' : '';
+
+                let body;
+                if(h1) {
+                    if(h1_style) {
+                        h1.classList.add(h1_style);
+                    }
+                    body = main_clone.outerHTML;
+                } else {
+                    body = `<h1 class="main-title ${h1_style}">${title}</h1>`
+                        + main_clone.outerHTML;
                 }
 
                 data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}">${body}</body>`;
