@@ -707,45 +707,39 @@ pdfcrowdChatGPT.init = function() {
                     data.scale_factor = options.zoom;
                 }
 
-                let break_selector;
                 if(options.no_questions) {
                     classes += 'pdfcrowd-no-questions ';
-                    break_selector = '.gizmo-bot-avatar';
-                } else {
-                    break_selector = '[data-message-author-role="user"]';
+                }
+
+                if(options.no_icons) {
+                    classes += 'pdfcrowd-no-icons ';
                 }
 
                 if(options.page_break === 'after') {
-                    const break_elems = main_clone.querySelectorAll(
-                        break_selector);
-                    break_elems.forEach((element, index) => {
-                        if(index !== 0) {
-                            element.style.pageBreakBefore = 'always';
-                        }
-                    });
+                    classes += 'pdfcrowd-break-after ';
                 }
 
+                let toc = '';
                 if(options.toc) {
-                    const toc_title = '';
-                    data.on_load_javascript = `
-libPdfcrowd.insertTableOfContents({
-    selectors: '[data-message-author-role="user"]',
-    target: '#pdfcrowd-toc',
-    pageBreak: 'after',
-    title: '${toc_title}',
-    style: 'margin-top: 2em'
-});`;
+                    if(options.toc === 'numbering') {
+                        classes += 'pdfcrowd-use-toc-numbering ';
+                    }
+                    toc = '<div id="pdfcrowd-toc"></div>';
                 }
 
                 const h1_style = options.title_mode === 'none' ? 'hidden' : '';
-                const toc = '<div id="pdfcrowd-toc"></div>';
 
                 let body;
                 if(h1) {
                     if(h1_style) {
                         h1.classList.add(h1_style);
                     }
-                    body = toc + main_clone.outerHTML;
+                    if(toc) {
+                        const tocDiv = document.createElement('div');
+                        tocDiv.id = 'pdfcrowd-toc';
+                        h1.insertAdjacentElement('afterend', tocDiv);
+                    }
+                    body = main_clone.outerHTML;
                 } else {
                     body = `<h1 class="main-title ${h1_style}">${title}</h1>`
                         + toc + main_clone.outerHTML;

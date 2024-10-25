@@ -54,6 +54,17 @@
 
             <tr>
               <th scope="row">
+                <label for="no_icons">Exclude icons:</label>
+              </th>
+              <td>
+                <input type="checkbox"
+                       id="no_icons" name="no_icons"
+                       aria-label="Exclude user and ChatGPT icons from PDF">
+              </td>
+            </tr>
+
+            <tr>
+              <th scope="row">
                 <label for="zoom">Font size (30-300%):</label>
               </th>
               <td>
@@ -191,12 +202,16 @@
               </th>
               <td>
                 <div class="flex-center">
-                  <input type="checkbox"
-                         id="toc" name="toc"
-                         aria-label="Show table of contents">
-                  <div>
-                    (it will be build from user prompts)
+                  <select name="toc" id="toc"
+                          aria-label="Choose the presence of a table of contents">
+                    <option value="">None</option>
+                    <option value="basic">Basic</option>
+                    <option value="numbering">With numbering</option>
+                  </select>
+                  <div class="toc-note">
+                    (The table of contents will be generated from user prompts)
                   </div>
+                </div>
               </td>
             </tr>
 

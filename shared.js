@@ -15,10 +15,11 @@ pdfcrowdShared.defaultOptions = {
     margin_top: '0.4in',
     margin_bottom: '0.4in',
     page_break: '',
-    toc: false
+    toc: '',
+    no_icons: false
 }
 
-pdfcrowdShared.version = 'v1.20';
+pdfcrowdShared.version = 'v1.21';
 
 pdfcrowdShared.rateUsLink = '#';
 pdfcrowdShared.hasOptions = true;

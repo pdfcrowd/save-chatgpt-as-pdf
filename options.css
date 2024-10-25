@@ -2,7 +2,7 @@
 @-moz-document url-prefix(){
     body {
         font-family: "Noto Sans", Arial, sans-serif;
-        font-size: 75%
+        font-size: 75%;
     }
     hr {
         border-color: #ddd;
@@ -123,4 +123,11 @@ h1 {
 .flex-center {
     display: flex;
     align-items: center;
+}
+
+.toc-note {
+    font-size: 0.85em;
+    font-style: italic;
+    color: #6c757d;
+    margin-left: .5rem;
 }

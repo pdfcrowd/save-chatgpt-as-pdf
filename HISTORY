@@ -1,3 +1,8 @@
+Changes in 1.21
+- Added: option to exclude icons
+- Added: option to add page break after each response
+- Added: option to generate a table of contents
+
 Changes in 1.20
 - Fixed: dynamic appearance of the button so it does not overlap other buttons
 
