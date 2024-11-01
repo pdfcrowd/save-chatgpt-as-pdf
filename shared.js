@@ -26,6 +26,8 @@ pdfcrowdShared.hasOptions = true;
 if (typeof GM_info !== 'undefined') {
     pdfcrowdShared.rateUsLink = 'https://greasyfork.org/en/scripts/484463-save-chatgpt-as-pdf/feedback#post-discussion';
     pdfcrowdShared.hasOptions = false;
+} else if (navigator.userAgent.includes('Edg/')) {
+    pdfcrowdShared.rateUsLink = 'https://microsoftedge.microsoft.com/addons/detail/save-chatgpt-as-pdf/fjlfcopnobjbkjiclieaopipchijelmj';
 } else if (navigator.userAgent.includes("Chrome")) {
     pdfcrowdShared.rateUsLink = 'https://chromewebstore.google.com/detail/save-chatgpt-as-pdf/ccjfggejcoobknjolglgmfhoeneafhhm/reviews';
 } else if (navigator.userAgent.includes("Firefox")) {
