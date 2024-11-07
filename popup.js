@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if(permissions) {
         permissions.contains({
-            origins: ['*://chatgpt.com/*']
+            origins: ['*://chatgpt.com/*', '*://chat.com/*']
         }).then((result) => {
             if (!result) {
                 // does not work correctly, disabled for now

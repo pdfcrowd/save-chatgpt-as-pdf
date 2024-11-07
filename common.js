@@ -844,8 +844,8 @@ pdfcrowdChatGPT.init = function() {
         );
     }
 
-    const is_shared = window.location.href.startsWith(
-        "https://chatgpt.com/share/");
+    const shared_urls = /^https:\/\/chat(gpt)?.com\/share\//;
+    const is_shared = shared_urls.test(window.location.href);
     const pdfcrowd_block = addPdfcrowdBlock();
 
     const BUTTON_MARGIN = 8;
