@@ -921,8 +921,7 @@ pdfcrowdChatGPT.init = function() {
     }
 
     function checkForContent() {
-        if(document.querySelector('main div[role="presentation"]') ||
-           (is_shared || document.querySelector('div.grow'))) {
+        if(document.querySelector('[data-message-author-role="user"]')) {
             changeButtonPosition();
 
             pdfcrowd_block.classList.remove('pdfcrowd-hidden');
