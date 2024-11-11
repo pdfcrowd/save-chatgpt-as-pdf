@@ -720,7 +720,7 @@ pdfcrowdChatGPT.init = function() {
                 }
 
                 let toc = '';
-                if(options.toc) {
+                if(options.toc && !options.no_questions) {
                     if(options.toc === 'numbering') {
                         classes += 'pdfcrowd-use-toc-numbering ';
                     }
