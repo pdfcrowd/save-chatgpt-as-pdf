@@ -439,14 +439,7 @@ pdfcrowdChatGPT.init = function() {
 `;
 
     function findRow(element) {
-        while(element) {
-            if(element.classList &&
-               element.classList.contains('text-token-text-primary')) {
-                return element;
-            }
-            element = element.parentElement;
-        }
-        return null;
+        return element.closest('article');
     }
 
     function hasParent(element, parent) {
