@@ -57,6 +57,19 @@ pdfcrowdChatGPT.init = function() {
      display: none;
  }
 
+ .pdfcrowd-btn-xs-small .pdfcrowd-lg, .pdfcrowd-btn-xs-small .pdfcrowd-sm {
+     display: none;
+ }
+
+ .pdfcrowd-btn-xs-small .btn-small {
+     background: none;
+     border: none;
+ }
+
+ .pdfcrowd-btn-xs-small svg {
+     margin: 0;
+ }
+
  svg.pdfcrowd-btn-content {
      width: 1rem;
      height: 1rem;
@@ -851,6 +864,9 @@ pdfcrowdChatGPT.init = function() {
     }, {
         width: 58,
         cls: 'pdfcrowd-btn-smallest'
+    }, {
+        width: 30,
+        cls: 'pdfcrowd-btn-xs-small'
     }];
 
     function getNewPos(elements) {
@@ -900,7 +916,9 @@ pdfcrowdChatGPT.init = function() {
                     pdfcrowd_block.style.right = newPosStr;
                     prevClass = newClass;
                     pdfcrowd_block.classList.remove(
-                        'pdfcrowd-btn-smaller', 'pdfcrowd-btn-smallest');
+                        'pdfcrowd-btn-smaller',
+                        'pdfcrowd-btn-smallest',
+                        'pdfcrowd-btn-xs-small');
                     if(newClass) {
                         pdfcrowd_block.classList.add(newClass);
                     }
@@ -909,7 +927,9 @@ pdfcrowdChatGPT.init = function() {
             }
         }
         pdfcrowd_block.classList.remove(
-            'pdfcrowd-btn-smaller', 'pdfcrowd-btn-smallest');
+            'pdfcrowd-btn-smaller',
+            'pdfcrowd-btn-smallest',
+            'pdfcrowd-btn-xs-small');
         prevClass = null;
     }
 
