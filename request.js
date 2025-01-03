@@ -18,7 +18,7 @@ pdfcrowdChatGPT.doRequest = function(data, fileName, fnCleanup) {
         });
     } catch(error) {
         fnCleanup();
-        pdfcrowdChatGPT.showError(null, `Please refresh the page. The 'Save ChatGPT as PDF' extension has likely been updated.<br><small>${error}</small>`);
+        pdfcrowdChatGPT.showError(null, `Please refresh the page. The 'ChatGPT to PDF by PDFCrowd' extension has likely been updated.<br><small>${error}</small>`);
     }
 };
 

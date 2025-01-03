@@ -378,7 +378,7 @@ pdfcrowdChatGPT.init = function() {
         </button>
         <hr>
         <a id="pdfcrowd-options" href="#"
-           aria-label="Save ChatGPT as PDF options"
+           aria-label="ChatGPT to PDF by PDFCrowd options"
            class="pdfcrowd-extra-btn pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
             Options
         </a>
@@ -386,7 +386,7 @@ pdfcrowdChatGPT.init = function() {
             id="pdfcrowd-help"
             type="button"
             role="button"
-            aria-label="Save ChatGPT as PDF help"
+            aria-label="ChatGPT to PDF by PDFCrowd help"
             class="pdfcrowd-extra-btn pdfcrowd-fs-small pdfcrowd-px-2 pdfcrowd-py-1">
             Help
         </button>
@@ -436,7 +436,7 @@ pdfcrowdChatGPT.init = function() {
     <div class="pdfcrowd-overlay" id="pdfcrowd-help-overlay">
         <div class="pdfcrowd-dialog">
             <div class="pdfcrowd-dialog-header">
-                Save ChatGPT as PDF <span style="font-size:smaller">by PDFCrowd</span>
+                ChatGPT to PDF by PDFCrowd
                 <span class="pdfcrowd-close-x pdfcrowd-close-btn">&times;</span>
             </div>
             <div class="pdfcrowd-dialog-body">

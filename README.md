@@ -1,8 +1,8 @@
-# Save ChatGPT as PDF
+# ChatGPT to PDF by PDFCrowd
 
 ## Introduction
 
-"Save ChatGPT as PDF" is a tool that adds a button to the ChatGPT webpage and allows you to save your chats to PDF in one click. It is available as a browser extension or a user script. The tool uses [PDFCrowd API](https://pdfcrowd.com/api/html-to-pdf-api/) to create PDF.
+"ChatGPT to PDF by PDFCrowd" is a tool that adds a button to the ChatGPT webpage and allows you to save your chats to PDF in one click. It is available as a browser extension or a user script. The tool uses [PDFCrowd API](https://pdfcrowd.com/api/html-to-pdf-api/) to create PDF.
 
 ![Button](images/chatgpt-infog.png)
 

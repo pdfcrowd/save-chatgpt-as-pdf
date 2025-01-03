@@ -19,7 +19,7 @@ pdfcrowdShared.defaultOptions = {
     no_icons: false
 }
 
-pdfcrowdShared.version = 'v1.23';
+pdfcrowdShared.version = 'v1.24';
 
 pdfcrowdShared.rateUsLink = '#';
 pdfcrowdShared.hasOptions = true;
@@ -75,7 +75,7 @@ pdfcrowdShared.helpContent = `
     </div>
     <ul>
         <li>
-            Save ChatGPT as PDF
+            ChatGPT to PDF by PDFCrowd
             <a href="https://pdfcrowd.com/save-chatgpt-as-pdf/" target="_blank">homepage</a>
         </li>
         <li>
