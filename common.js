@@ -12,6 +12,9 @@ pdfcrowdChatGPT.init = function() {
         return;
     }
 
+    let customPosition = false;
+    let isDragging = false;
+
     // remote images live at least 1 minute
     const minImageDuration = 60000;
 
@@ -609,6 +612,8 @@ pdfcrowdChatGPT.init = function() {
     }
 
     function convert(event) {
+        if(isDragging) return;
+
         pdfcrowdShared.getOptions(function(options) {
             let main = document.getElementsByTagName('main');
             main = main.length ? main[0] : document.querySelector('div.grow');
@@ -902,6 +907,79 @@ pdfcrowdChatGPT.init = function() {
 
     let prevClass = null;
 
+    function initDraggable() {
+        const movableDiv = pdfcrowd_block;
+        const draggableDiv = movableDiv;
+
+        let offsetX = 0, offsetY = 0;
+        let startX = 0, startY = 0;
+        let maxX, maxY;
+        let draggingStart = false;
+
+        draggableDiv.addEventListener('mousedown', (e) => {
+            if(e.button === 0) {
+                isDragging = false;
+                draggingStart = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                offsetX = e.clientX - movableDiv.offsetLeft;
+                offsetY = e.clientY - movableDiv.offsetTop;
+                const rect = draggableDiv.getBoundingClientRect();
+                maxX = window.innerWidth - rect.width;
+                maxY = window.innerHeight - rect.height;
+            }
+         });
+
+        // Dragging the element
+        document.addEventListener('mousemove', (e) => {
+            if(draggingStart) {
+                // check if minimal move has been done
+                if(!isDragging && (Math.abs(e.clientX - startX) > 5 ||
+                                   Math.abs(e.clientY - startY) > 5)) {
+                    isDragging = true;
+                }
+
+                if(isDragging) {
+                    let newLeft = e.clientX - offsetX;
+                    let newTop = e.clientY - offsetY;
+
+                    newLeft = Math.max(0, Math.min(newLeft, maxX));
+                    newTop = Math.max(0, Math.min(newTop, maxY));
+
+                    movableDiv.style.right = 'auto';
+                    movableDiv.style.left = `${newLeft}px`;
+                    movableDiv.style.top = `${newTop}px`;
+                    customPosition = true;
+                }
+            }
+        });
+
+        // Stop dragging
+        draggableDiv.addEventListener('mouseup', () => {
+            draggingStart = false;
+            setTimeout(() => {
+                isDragging = false;
+            }, 0);
+        });
+
+        // Recalculate boundaries on window resize
+        window.addEventListener('resize', () => {
+            bounds = getViewportBounds(); // Recalculate boundaries
+
+            // Ensure the `div` stays within the new boundaries
+            let currentLeft = parseInt(movableDiv.style.left, 10) || 0;
+            let currentTop = parseInt(movableDiv.style.top, 10) || 0;
+
+            currentLeft = Math.max(bounds.minX, Math.min(currentLeft, bounds.maxX));
+            currentTop = Math.max(bounds.minY, Math.min(currentTop, bounds.maxY));
+
+            movableDiv.style.left = `${currentLeft}px`;
+            movableDiv.style.top = `${currentTop}px`;
+        });
+    }
+
+    initDraggable();
+
     function changeButtonPosition() {
         const topBar = getTopBar();
         if(topBar) {
@@ -935,7 +1013,9 @@ pdfcrowdChatGPT.init = function() {
 
     function checkForContent() {
         if(document.querySelector('[data-message-author-role="user"]')) {
-            changeButtonPosition();
+            if(!isDragging && !customPosition) {
+                changeButtonPosition();
+            }
 
             pdfcrowd_block.classList.remove('pdfcrowd-hidden');
             // fix conflict with other extensions which remove the button
