@@ -16,7 +16,8 @@ pdfcrowdShared.defaultOptions = {
     margin_bottom: '0.4in',
     page_break: '',
     toc: '',
-    no_icons: false
+    no_icons: false,
+    custom_pos: null
 }
 
 pdfcrowdShared.version = 'v1.24';

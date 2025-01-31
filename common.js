@@ -12,8 +12,8 @@ pdfcrowdChatGPT.init = function() {
         return;
     }
 
-    let customPosition = false;
     let isDragging = false;
+    let customPosition = null;
 
     // remote images live at least 1 minute
     const minImageDuration = 60000;
@@ -905,6 +905,12 @@ pdfcrowdChatGPT.init = function() {
         return null;
     }
 
+    function setCustomPosition(pos) {
+        pdfcrowd_block.style.right = 'auto';
+        pdfcrowd_block.style.left = pos.x;
+        pdfcrowd_block.style.top = pos.y;
+    }
+
     let prevClass = null;
 
     function initDraggable() {
@@ -945,11 +951,11 @@ pdfcrowdChatGPT.init = function() {
 
                     newLeft = Math.max(0, Math.min(newLeft, maxX));
                     newTop = Math.max(0, Math.min(newTop, maxY));
-
-                    movableDiv.style.right = 'auto';
-                    movableDiv.style.left = `${newLeft}px`;
-                    movableDiv.style.top = `${newTop}px`;
-                    customPosition = true;
+                    customPosition = {
+                        x: `${newLeft}px`,
+                        y: `${newTop}px`
+                    };
+                    setCustomPosition(customPosition);
                 }
             }
         });
@@ -1010,6 +1016,13 @@ pdfcrowdChatGPT.init = function() {
             'pdfcrowd-btn-xs-small');
         prevClass = null;
     }
+
+    pdfcrowdShared.getOptions(function(options) {
+        customPosition = options.custom_pos;
+        if(customPosition) {
+            setCustomPosition(customPosition);
+        }
+    });
 
     function checkForContent() {
         if(document.querySelector('[data-message-author-role="user"]')) {
