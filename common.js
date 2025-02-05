@@ -751,7 +751,9 @@ pdfcrowdChatGPT.init = function() {
                         + toc + main_clone.outerHTML;
                 }
 
-                data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}">${body}</body>`;
+                const direction = document.documentElement.getAttribute(
+                    'dir') || 'ltr';
+                data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}" dir="${direction}">${body}</body>`;
 
                 pdfcrowdChatGPT.doRequest(
                     data, addPdfExtension(filename), cleanup);
