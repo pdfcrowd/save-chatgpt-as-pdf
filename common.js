@@ -751,9 +751,46 @@ pdfcrowdChatGPT.init = function() {
                         + toc + main_clone.outerHTML;
                 }
 
+                function getModelName(element) {
+                    function traverse(node) {
+                        let text = '';
+
+                        node.childNodes.forEach(child => {
+                            let childText = '';
+                            if (child.nodeType === Node.TEXT_NODE) {
+                                childText = child.textContent.trim();
+                            } else if (child.nodeType === Node.ELEMENT_NODE) {
+                                childText = traverse(child);
+                            }
+
+                            if(childText) {
+                                if(text) {
+                                    text += ' - ';
+                                }
+                                text += childText;
+                            }
+                        });
+
+                        return text;
+                    }
+
+                    return traverse(element).trim();
+                }
+
+                let model_name = '';
+                if(options.model_name) {
+                    const model_el = document.querySelector(
+                        '#page-header > .flex');
+                    if(model_el) {
+                        model_name = '<div class="pdfcrowd-model-name">' +
+                            getModelName(model_el) +
+                            '</div>';
+                    }
+                }
+
                 const direction = document.documentElement.getAttribute(
                     'dir') || 'ltr';
-                data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}" dir="${direction}">${body}</body>`;
+                data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}" dir="${direction}">${model_name}${body}</body>`;
 
                 pdfcrowdChatGPT.doRequest(
                     data, addPdfExtension(filename), cleanup);
