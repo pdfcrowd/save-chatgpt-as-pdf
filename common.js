@@ -615,8 +615,9 @@ pdfcrowdChatGPT.init = function() {
             const main_clone = prepareContent(main);
             const h1 = main_clone.querySelector('h1');
 
+            let questions = null;
             if(options.q_color !== 'default') {
-                const questions = main_clone.querySelectorAll(
+                questions = main_clone.querySelectorAll(
                     '[data-message-author-role="user"]');
                 const color_val = options.q_color === 'none'
                       ? 'unset' : options.q_color_picker;
@@ -626,6 +627,16 @@ pdfcrowdChatGPT.init = function() {
                         question.style.paddingLeft = 0;
                         question.style.paddingRight = 0;
                     }
+                });
+            }
+
+            if(options.q_fg_color !== 'default') {
+                if(!questions) {
+                    questions = main_clone.querySelectorAll(
+                        '[data-message-author-role="user"]');
+                }
+                questions.forEach(function(question) {
+                    question.style.color = options.q_fg_color_picker;
                 });
             }
 

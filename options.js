@@ -67,9 +67,9 @@ function onChange() {
     document.getElementById('status').style.display = 'none';
 }
 
-function toggleColorInput() {
-    const colorInput = document.getElementById('q_color_picker_row');
-    if (this.value === 'custom') {
+function toggleColorInput(value, pickerId) {
+    const colorInput = document.getElementById(pickerId);
+    if (value === 'custom') {
         colorInput.style.display = 'table-row';
     } else {
         colorInput.style.display = 'none';
@@ -90,7 +90,13 @@ function toggleMargins() {
 }
 
 document.getElementById('q_color').addEventListener(
-    'change', toggleColorInput);
+    'change', function() {
+        toggleColorInput(this.value, 'q_color_picker_row');
+    });
+document.getElementById('q_fg_color').addEventListener(
+    'change', function() {
+        toggleColorInput(this.value, 'q_fg_color_picker_row');
+    });
 document.getElementById('margins').addEventListener(
     'change', toggleMargins);
 

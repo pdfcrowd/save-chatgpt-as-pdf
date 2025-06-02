@@ -183,6 +183,30 @@
 
             <tr>
               <th scope="row">
+                <label for="q_fg_color">User input text color:</label>
+              </th>
+              <td>
+                <select id="q_fg_color" name="q_fg_color"
+                        aria-label="Choose user input text color">
+                  <option value="default">Default</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </td>
+            </tr>
+
+            <tr id="q_fg_color_picker_row" class="sub-option">
+              <th scope="row">
+                <label for="q_fg_color_picker">Choose color:</label>
+              </th>
+              <td>
+                <input id="q_fg_color_picker" type="color"
+                       name="q_fg_color_picker"
+                       aria-label="Pick custom user input text color">
+              </td>
+            </tr>
+
+            <tr>
+              <th scope="row">
                 <label for="page_break">Page breaks:</label>
               </th>
               <td>

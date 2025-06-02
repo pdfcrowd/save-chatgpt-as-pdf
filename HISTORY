@@ -1,5 +1,6 @@
 Changes in 1.26
 - Added: option to print ChatGPT model name in the PDF
+- Added: option for text color for user prompts
 
 Changes in 1.25
 - Support for o3-mini.
