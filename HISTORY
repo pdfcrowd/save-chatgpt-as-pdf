@@ -1,3 +1,6 @@
+Changes in 1.27
+- Minor: Help dialog text update
+
 Changes in 1.26
 - Added: option to print ChatGPT model name in the PDF
 - Added: option for text color for user prompts

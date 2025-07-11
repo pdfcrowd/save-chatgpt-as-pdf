@@ -208,6 +208,10 @@ pdfcrowdChatGPT.init = function() {
      border-top-right-radius: 10px;
  }
 
+ .pdfcrowd-help-content {
+     max-width: 660px;
+ }
+
  .pdfcrowd-version {
      position: absolute;
      bottom: 0;
