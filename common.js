@@ -469,7 +469,53 @@ pdfcrowdChatGPT.init = function() {
         return false;
     }
 
+    function addImgBase64Src(element) {
+        const images = element.querySelectorAll('img');
+
+        for (let i = 0; i < images.length; i++) {
+            const img = images[i];
+            const src = img.getAttribute('src');
+
+            if (!src ||
+                !src.startsWith('https://chatgpt.com/backend-api/') ||
+                img.hasAttribute('data-pdfcrowd-img-src')) {
+                continue;
+            }
+
+            // Skip if image is not yet loaded
+            if (!img.complete || img.naturalWidth === 0) {
+                continue;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.classList.add('pdfcrowd-img-canvas');
+            canvas.style.setProperty('display', 'none', 'important');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            img.setAttribute('data-pdfcrowd-img-src', canvas.toDataURL());
+        }
+    }
+
+    function applyDataSrcBase(element) {
+        const images = element.querySelectorAll('img[data-pdfcrowd-img-src]');
+
+        for (let i = 0; i < images.length; i++) {
+            const img = images[i];
+            const dataSrc = img.getAttribute('data-pdfcrowd-img-src');
+
+            if (dataSrc) {
+                img.setAttribute('src', dataSrc);
+            }
+        }
+    }
+
     function prepareSelection(element) {
+        addImgBase64Src(element);
+
         const selection = window.getSelection();
         if(!selection.isCollapsed) {
             const rangeCount = selection.rangeCount;
@@ -500,6 +546,8 @@ pdfcrowdChatGPT.init = function() {
         }
         let element_clone = element.cloneNode(true);
         persistCanvases(element, element_clone);
+        applyDataSrcBase(element_clone);
+
         if(element_clone.tagName.toLowerCase() !== 'main') {
             // add main element as it's not presented in a shared chat
             const main = document.createElement('main');

@@ -2,7 +2,7 @@
 {
     "manifest_version": 3,
     "name": "ChatGPT to PDF by PDFCrowd",
-    "version": "1.27",
+    "version": "1.28",
     "description": "Turn your chats into neatly formatted PDF.",
     "action": {
         "default_icon": {
