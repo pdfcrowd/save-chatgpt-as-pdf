@@ -53,9 +53,19 @@ pdfcrowdShared.helpContent = `
     <span class="popup-hidden">
     Please <a href="${pdfcrowdShared.rateUsLink}">rate us</a> if you like the extension. It helps a lot!
     </span>
-    <br>
-    <strong>Important</strong>: All generated PDFs include a banner at the bottom which cannot be removed. Purchasing a PDFCrowd license does not remove the banner. 
 </div>
+
+<div class="pdfcrowd-category">
+  <div class="pdfcrowd-category-title">
+    Note
+  </div>
+  <div>
+    All generated PDFs include a banner which cannot be removed.
+    <br>
+    Purchasing a PDFCrowd license does not remove the banner.
+  </div>
+</div>
+
 
 <div class="pdfcrowd-category">
     <div class="pdfcrowd-category-title">
