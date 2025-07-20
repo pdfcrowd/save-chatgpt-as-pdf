@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT to PDF by PDFCrowd
 // @namespace    http://tampermonkey.net/
-// @version      1.28
+// @version      3.0
 // @description  Turn your chats into neatly formatted PDF.
 // @author       PDFCrowd (https://pdfcrowd.com/)
 // @match        https://chatgpt.com/*
