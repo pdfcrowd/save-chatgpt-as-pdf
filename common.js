@@ -1066,7 +1066,7 @@ pdfcrowdChatGPT.init = function() {
     setInterval(checkForContent, 1000);
 }
 
-pdfcrowdChatGPT.showError = function(status, text) {
+pdfcrowdChatGPT.showError = function(status, text, hideContact) {
   let html;
   if (status == 432) {
     html = [
@@ -1086,10 +1086,12 @@ pdfcrowdChatGPT.showError = function(status, text) {
       } else {
           html.push(text);
       }
-      html.push(`If the problem persists, contact us at
+      if(!hideContact) {
+          html.push(`If the problem persists, contact us at
             <a href="mailto:support@pdfcrowd.com?subject=ChatGPT%20error">
               support@pdfcrowd.com
             </a>`);
+      }
   }
   html = html.join('<br>');
   document.getElementById('pdfcrowd-error-overlay').style.display = 'flex';

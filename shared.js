@@ -22,7 +22,7 @@ pdfcrowdShared.defaultOptions = {
     model_name: false
 }
 
-pdfcrowdShared.version = 'v3.0';
+pdfcrowdShared.version = 'v3.1';
 
 pdfcrowdShared.rateUsLink = '#';
 pdfcrowdShared.hasOptions = true;
