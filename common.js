@@ -411,6 +411,7 @@ pdfcrowdChatGPT.init = function() {
             </div>
             <div class="pdfcrowd-dialog-footer">
                 <button class="btn btn-secondary pdfcrowd-close-btn">Close</button>
+                <div class="pdfcrowd-version">${pdfcrowdShared.version}</div>
             </div>
         </div>
     </div>
