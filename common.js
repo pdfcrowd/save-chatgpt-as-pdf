@@ -649,17 +649,19 @@ pdfcrowdChatGPT.init = function() {
 
     function getTitle() {
         let title = '';
-        const titles = document.getElementsByTagName('title');
-        if(titles.length > 0) {
-            title = titles[0].textContent;
-        } else {
-            const chatTitle = document.querySelector(
-                `nav a[href="${window.location.pathname}"]`);
-            if(chatTitle) {
-                title = chatTitle.textContent;
+        const chatTitle = document.querySelector(
+            `nav a[href="${window.location.pathname}"]`);
+        if(chatTitle) {
+            // use chat title 1st as it does not contain model name in it
+            title = chatTitle.textContent.trim();
+        }
+        if(!title) {
+            const titles = document.getElementsByTagName('title');
+            if(titles.length > 0) {
+                title = titles[0].textContent.trim();
             }
         }
-        return title.trim();
+        return title;
     }
 
     function convert(event) {
@@ -846,7 +848,7 @@ pdfcrowdChatGPT.init = function() {
                 let model_name = '';
                 if(options.model_name) {
                     const model_el = document.querySelector(
-                        '#page-header > .flex');
+                        '#page-header .text-lg');
                     if(model_el) {
                         model_name = '<div class="pdfcrowd-model-name">' +
                             getModelName(model_el) +
