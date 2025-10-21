@@ -747,8 +747,13 @@ pdfcrowdChatGPT.init = function() {
                 const convOptions = JSON.parse(
                     trigger.dataset.convOptions || '{}');
 
+                let singlePagePrint = false;
                 for(let key in convOptions) {
-                    data[key] = convOptions[key];
+                    const convOptionValue = convOptions[key];
+                    data[key] = convOptionValue;
+                    if(key === 'page_height' && convOptionValue === '-1') {
+                        singlePagePrint = true;
+                    }
                 }
 
                 if(!('viewport_width' in convOptions)) {
@@ -769,10 +774,10 @@ pdfcrowdChatGPT.init = function() {
                     data.margin_bottom = '12px';
                 }
 
-                let classes = '';
+                let classes = singlePagePrint ? 'pdfcrowd-single-page ' : '';
                 if(options.theme === 'dark' ||
                    (options.theme === '' && !isLight(document.body))) {
-                    classes = 'pdfcrowd-dark ';
+                    classes += 'pdfcrowd-dark ';
                     data.page_background_color = '333333';
                 }
 
@@ -790,6 +795,14 @@ pdfcrowdChatGPT.init = function() {
 
                 if(options.page_break === 'after') {
                     classes += 'pdfcrowd-break-after ';
+                }
+
+                if(options.q_align) {
+                    classes += 'pdfcrowd-q-align-' + options.q_align + ' ';
+                }
+
+                if(options.q_rounded) {
+                    classes += 'pdfcrowd-q-rounded ';
                 }
 
                 let toc = '';

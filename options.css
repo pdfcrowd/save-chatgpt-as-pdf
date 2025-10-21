@@ -1,15 +1,16 @@
 /* firefox specific */
 @-moz-document url-prefix(){
-    body {
-        font-family: "Noto Sans", Arial, sans-serif;
-        font-size: 75%;
-    }
     hr {
         border-color: #ddd;
     }
     .firefox-hide {
         display: none;
     }
+}
+
+body {
+    font-family: "Noto Sans", Arial, sans-serif;
+    font-size: 85%;
 }
 
 .title-wrapper {
@@ -104,6 +105,10 @@ form.options select {
     min-width: 90px;
 }
 
+form.options input[type="checkbox"] {
+    margin: 0;
+}
+
 .sub-option {
     display: none;
 }
@@ -130,4 +135,24 @@ h1 {
     font-style: italic;
     color: #6c757d;
     margin-left: .5rem;
+}
+
+form.options fieldset {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: #fff;
+}
+
+form.options legend {
+    font-weight: bold;
+    font-size: 1em;
+    color: #333;
+    padding: 0 0.5rem;
+}
+
+button {
+    font-size: 100%;
+    padding: .5em;
 }
