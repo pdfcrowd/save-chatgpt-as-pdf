@@ -602,7 +602,8 @@ pdfcrowdChatGPT.init = function() {
             style.display !== 'none' &&
                 style.visibility !== 'hidden' &&
                 element.offsetWidth > 0 &&
-                element.offsetHeight > 0
+                element.offsetHeight > 0 &&
+                style.opacity !== '0'
         );
     }
 
@@ -646,17 +647,17 @@ pdfcrowdChatGPT.init = function() {
         }
     }
 
-    function getTitle(main) {
-        const h1 = main.querySelector('h1');
-        let title;
-        if(h1) {
-            title = h1.textContent;
+    function getTitle() {
+        let title = '';
+        const titles = document.getElementsByTagName('title');
+        if(titles.length > 0) {
+            title = titles[0].textContent;
         } else {
             const chatTitle = document.querySelector(
                 `nav a[href="${window.location.pathname}"]`);
-            title = chatTitle
-                ? chatTitle.textContent
-                : document.getElementsByTagName('title')[0].textContent;
+            if(chatTitle) {
+                title = chatTitle.textContent;
+            }
         }
         return title.trim();
     }
@@ -693,7 +694,7 @@ pdfcrowdChatGPT.init = function() {
                 });
             }
 
-            let title = getTitle(main);
+            let title = getTitle();
             let filename = title;
 
             function doConvert() {
@@ -797,23 +798,24 @@ pdfcrowdChatGPT.init = function() {
                     toc = '<div id="pdfcrowd-toc"></div>';
                 }
 
-                const h1_style = options.title_mode === 'none' ? 'hidden' : '';
-
-                let body;
-                if(h1) {
-                    if(h1_style) {
-                        h1.classList.add(h1_style);
-                    }
-                    if(toc) {
-                        const tocDiv = document.createElement('div');
-                        tocDiv.id = 'pdfcrowd-toc';
-                        h1.insertAdjacentElement('afterend', tocDiv);
-                    }
-                    body = main_clone.outerHTML;
-                } else {
-                    body = `<h1 class="main-title ${h1_style}">${title}</h1>`
-                        + toc + main_clone.outerHTML;
+                let datetimeHtml = '';
+                if (options.datetime_format &&
+                    options.datetime_format !== 'none') {
+                    const now = new Date();
+                    const datetimeStr =
+                          options.datetime_format === 'date_only'
+                          ? now.toLocaleDateString()
+                          : now.toLocaleString();
+                    datetimeHtml =
+                        `<div class="pdfcrowd-datetime">${datetimeStr}</div>`;
                 }
+
+                const h1_style =
+                    options.title_mode === 'none' ? 'hidden' : '';
+
+                // do not use H1 from document as it may be in the content
+                const body = `<h1 class="main-title ${h1_style}">${title}</h1>`
+                        + datetimeHtml + toc + main_clone.outerHTML;
 
                 function getModelName(element) {
                     function traverse(node) {
@@ -854,7 +856,10 @@ pdfcrowdChatGPT.init = function() {
 
                 const direction = document.documentElement.getAttribute(
                     'dir') || 'ltr';
-                data.text = `<!DOCTYPE html><html><head><meta charSet="utf-8"/></head><body class="${classes}" dir="${direction}">${model_name}${body}</body>`;
+                data.text = `<!DOCTYPE html><html><head>` +
+                    `<meta charSet="utf-8"/></head>` +
+                    `<body class="${classes}" dir="${direction}">` +
+                    `${model_name}${body}</body>`;
 
                 pdfcrowdChatGPT.doRequest(
                     data, addPdfExtension(filename), cleanup);
@@ -873,10 +878,6 @@ pdfcrowdChatGPT.init = function() {
                         title = titleInput.value.trim();
                         if(title) {
                             filename = title;
-                        }
-                        // replace h1 if presented is the converted content
-                        if(h1) {
-                            h1.innerText = title;
                         }
                         doConvert();
                     };

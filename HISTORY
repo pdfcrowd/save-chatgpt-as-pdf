@@ -1,3 +1,7 @@
+Changes in 3.2
+- New: ability to insert the current date and time into the generated PDF
+- Fixed: the main title detection
+
 Changes in 3.1
 - Minor: improved error message when converting large chats
 

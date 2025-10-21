@@ -19,10 +19,11 @@ pdfcrowdShared.defaultOptions = {
     page_break: '',
     toc: '',
     no_icons: false,
-    model_name: false
+    model_name: false,
+    datetime_format: 'none'
 }
 
-pdfcrowdShared.version = 'v3.1';
+pdfcrowdShared.version = 'v3.2';
 
 pdfcrowdShared.rateUsLink = '#';
 pdfcrowdShared.hasOptions = true;
