@@ -89,6 +89,23 @@ function toggleMargins() {
     }
 }
 
+function toggleUserInputStyling() {
+    const stylingOptions = document.querySelectorAll('.user-input-styling');
+    if (this.checked) {
+        stylingOptions.forEach(function(element) {
+            element.style.display = 'none';
+        });
+    } else {
+        stylingOptions.forEach(function(element) {
+            element.style.display = 'table-row';
+        });
+        const qColorValue = document.getElementById('q_color').value;
+        toggleColorInput(qColorValue, 'q_color_picker_row');
+        const qFgColorValue = document.getElementById('q_fg_color').value;
+        toggleColorInput(qFgColorValue, 'q_fg_color_picker_row');
+    }
+}
+
 document.getElementById('q_color').addEventListener(
     'change', function() {
         toggleColorInput(this.value, 'q_color_picker_row');
@@ -99,6 +116,8 @@ document.getElementById('q_fg_color').addEventListener(
     });
 document.getElementById('margins').addEventListener(
     'change', toggleMargins);
+document.getElementById('no_questions').addEventListener(
+    'change', toggleUserInputStyling);
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);

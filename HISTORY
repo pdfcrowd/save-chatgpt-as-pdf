@@ -2,9 +2,8 @@ Changes in 3.3
 - Added: option for user input text alignment (justified, left, center,
   right)
 - Added: option for rounded corners on user inputs
-- Improved: reorganized options page with logical grouping using
-  fieldsets
-- Fixed: issue with table of contents in single page mode
+- Improved: reorganized options page with logical grouping
+- Fixed: content presentation issues
 
 Changes in 3.2
 - Added: ability to insert the current date and time into the generated PDF

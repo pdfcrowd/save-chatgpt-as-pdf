@@ -182,7 +182,7 @@
                 </td>
               </tr>
 
-              <tr>
+              <tr class="user-input-styling">
                 <th scope="row">
                   <label for="q_color">Background color:</label>
                 </th>
@@ -197,7 +197,8 @@
                 </td>
               </tr>
 
-              <tr id="q_color_picker_row" class="sub-option">
+              <tr id="q_color_picker_row"
+                  class="sub-option user-input-styling">
                 <th scope="row">
                   <label for="q_color_picker">Choose color:</label>
                 </th>
@@ -210,7 +211,7 @@
                 </td>
               </tr>
 
-              <tr>
+              <tr class="user-input-styling">
                 <th scope="row">
                   <label for="q_fg_color">Text color:</label>
                 </th>
@@ -224,7 +225,8 @@
                 </td>
               </tr>
 
-              <tr id="q_fg_color_picker_row" class="sub-option">
+              <tr id="q_fg_color_picker_row"
+                  class="sub-option user-input-styling">
                 <th scope="row">
                   <label for="q_fg_color_picker">Choose color:</label>
                 </th>
@@ -236,9 +238,9 @@
                 </td>
               </tr>
 
-              <tr>
+              <tr class="user-input-styling">
                 <th scope="row">
-                  <label for="q_align">Text alignment:</label>
+                  <label for="q_align">Block position:</label>
                 </th>
                 <td>
                   <select id="q_align"
@@ -252,7 +254,7 @@
                 </td>
               </tr>
 
-              <tr>
+              <tr class="user-input-styling">
                 <th scope="row">
                   <label for="q_rounded">Rounded corners:</label>
                 </th>
@@ -261,6 +263,18 @@
                          id="q_rounded"
                          name="q_rounded"
                          aria-label="Apply rounded corners to user input">
+                </td>
+              </tr>
+
+              <tr class="user-input-styling">
+                <th scope="row">
+                  <label for="no_icons">Exclude icon:</label>
+                </th>
+                <td>
+                  <input type="checkbox"
+                         id="no_icons"
+                         name="no_icons"
+                         aria-label="Exclude user icon from PDF">
                 </td>
               </tr>
             </table>
@@ -318,19 +332,6 @@
                       input)
                     </div>
                   </div>
-                </td>
-              </tr>
-
-              <tr>
-                <th scope="row">
-                  <label for="no_icons">Exclude icons:</label>
-                </th>
-                <td>
-                  <input type="checkbox"
-                         id="no_icons"
-                         name="no_icons"
-                         aria-label="Exclude user and ChatGPT icons from
-                         PDF">
                 </td>
               </tr>
 

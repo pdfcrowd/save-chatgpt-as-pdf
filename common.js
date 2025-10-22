@@ -793,7 +793,7 @@ pdfcrowdChatGPT.init = function() {
                     classes += 'pdfcrowd-no-icons ';
                 }
 
-                if(options.page_break === 'after') {
+                if(options.page_break === 'after' && !singlePagePrint) {
                     classes += 'pdfcrowd-break-after ';
                 }
 
