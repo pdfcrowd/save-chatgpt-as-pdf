@@ -1,5 +1,6 @@
 Changes in 3.4
 - Added: automatic gzip compression for large conversations that exceed the 64MB message size limit
+- Changed: icons are now excluded by default for new installations (existing users unaffected)
 
 Changes in 3.3
 - Added: option for user input text alignment (justified, left, center,

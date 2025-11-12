@@ -100,3 +100,32 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         chrome.runtime.openOptionsPage();
     }
 });
+
+chrome.runtime.onInstalled.addListener((details) => {
+    if (details.reason === 'install') {
+        const newUserDefaults = {
+            margins: '',
+            theme: '',
+            zoom: 100,
+            no_questions: false,
+            q_color: 'default',
+            q_color_picker: '#ecf9f2',
+            q_fg_color: 'default',
+            q_fg_color_picker: '#000',
+            title_mode: '',
+            margin_left: '0.4in',
+            margin_right: '0.4in',
+            margin_top: '0.4in',
+            margin_bottom: '0.4in',
+            page_break: '',
+            toc: '',
+            no_icons: true,
+            model_name: false,
+            datetime_format: 'none',
+            q_align: 'justified',
+            q_rounded: false
+        };
+
+        chrome.storage.sync.set({options: newUserDefaults});
+    }
+});
