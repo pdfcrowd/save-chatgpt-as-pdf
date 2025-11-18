@@ -1,0 +1,34 @@
+{
+  "name": "save-chatgpt-as-pdf-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "@testing-library/dom": "^9.3.3",
+    "@testing-library/jest-dom": "^6.1.5",
+    "chrome-mock": "^0.0.9",
+    "pako": "^2.1.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/setup.js"],
+    "collectCoverageFrom": [
+      "../*.js",
+      "!../pdf-lib.js",
+      "!../pdfcrowd.js",
+      "!../content-ask.js"
+    ],
+    "coverageDirectory": "coverage",
+    "testMatch": [
+      "**/unit/*.test.js",
+      "**/integration/*.test.js"
+    ],
+    "rootDir": "."
+  }
+}

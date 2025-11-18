@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ChatGPT Test</title>
+    <style>.test { display: none; }</style>
+</head>
+<body>
+    <main>
+        <script>console.log('should be removed');</script>
+        <style>.another { color: red; }</style>
+
+        <!-- Elements to be removed per commit a206816 -->
+        <div class="absolute z-0">Background overlay</div>
+        <div class="absolute z-1">Another overlay</div>
+        <div id="AIPRM__sidebar">
+            <div>AIPRM Extension Content</div>
+        </div>
+
+        <!-- Chat content to preserve -->
+        <div class="conversation">
+            <div data-message-author-role="user">
+                <div class="message-content">
+                    How do I implement a binary search tree?
+                </div>
+            </div>
+
+            <div data-message-author-role="assistant">
+                <div class="message-content">
+                    A binary search tree is a data structure...
+                </div>
+            </div>
+
+            <div data-message-author-role="user">
+                <div class="message-content">
+                    Can you show me an example in Python?
+                </div>
+            </div>
+
+            <div data-message-author-role="assistant">
+                <div class="message-content">
+                    <pre><code>class Node:
+    def __init__(self, value):
+        self.value = value
+        self.left = None
+        self.right = None</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image that might be expired -->
+        <div class="grid">
+            <img src="https://chatgpt.com/expired-image.png" alt="Diagram">
+        </div>
+    </main>
+</body>
+</html>

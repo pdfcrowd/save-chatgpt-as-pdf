@@ -1,7 +1,13 @@
 SINGLE_FILE_JS = userscript/save-chatgpt-as-pdf.all.user.js
 
+.PHONY: help test build check-version build-firefox build-chrome build-userscript-single-file copyfiles
+
 help:
 	cat makefile
+
+test:
+	@echo "Running tests..."
+	cd test && $(MAKE) test
 
 build: check-version build-firefox build-chrome build-userscript-single-file
 	true

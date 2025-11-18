@@ -4,6 +4,3 @@
 .\#*
 *.zip
 userscript/save-chatgpt-as-pdf.all.user.js
-
-# Test folder (contains all test files, dependencies, and coverage)
-test/
