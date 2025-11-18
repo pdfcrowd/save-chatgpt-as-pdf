@@ -399,4 +399,117 @@ describe('Common.js - DOM Manipulation', () => {
             expect(localStorage.getItem('pdfcrowd-btn')).toBe('new-button');
         });
     });
+
+    describe('convert function - spinner on cancel title dialog', () => {
+        let btnConvert, spinner, titleOverlay;
+        let btnContentElements;
+
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <main>
+                    <div data-message-author-role="user">Test msg</div>
+                </main>
+                <button id="pdfcrowd-convert-main">
+                    <div class="pdfcrowd-btn-content">Save as PDF</div>
+                    <div id="pdfcrowd-spinner" class="pdfcrowd-hidden">
+                        <div class="pdfcrowd-spinner"></div>
+                    </div>
+                </button>
+                <div class="pdfcrowd-overlay" id="pdfcrowd-title-overlay"
+                     style="display: none;">
+                    <div class="pdfcrowd-dialog">
+                        <div class="pdfcrowd-dialog-header">
+                            <span class="pdfcrowd-close-x pdfcrowd-close-btn">
+                                &times;
+                            </span>
+                        </div>
+                        <input id="pdfcrowd-title">
+                        <button id="pdfcrowd-title-convert">
+                            Save PDF
+                        </button>
+                        <button class="pdfcrowd-close-btn">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            btnConvert = document.getElementById('pdfcrowd-convert-main');
+            spinner = document.getElementById('pdfcrowd-spinner');
+            titleOverlay = document.getElementById('pdfcrowd-title-overlay');
+            btnContentElements = document.querySelectorAll(
+                '.pdfcrowd-btn-content'
+            );
+        });
+
+        function setupCleanupHandlers() {
+            function cleanup() {
+                btnConvert.disabled = false;
+                spinner.classList.add('pdfcrowd-hidden');
+                btnContentElements.forEach(el => {
+                    el.classList.remove('pdfcrowd-invisible');
+                });
+            }
+
+            const cancelBtns = titleOverlay.querySelectorAll(
+                '.pdfcrowd-close-btn'
+            );
+            cancelBtns.forEach(btn => {
+                btn.onclick = function() {
+                    titleOverlay.style.display = 'none';
+                    cleanup();
+                };
+            });
+        }
+
+        test('should hide spinner when Cancel button clicked', () => {
+            btnConvert.disabled = true;
+            spinner.classList.remove('pdfcrowd-hidden');
+            btnContentElements.forEach(el => {
+                el.classList.add('pdfcrowd-invisible');
+            });
+            titleOverlay.style.display = 'flex';
+
+            setupCleanupHandlers();
+
+            const cancelBtn = titleOverlay.querySelectorAll(
+                '.pdfcrowd-close-btn'
+            )[1];
+            cancelBtn.click();
+
+            expect(titleOverlay.style.display).toBe('none');
+            expect(btnConvert.disabled).toBe(false);
+            expect(spinner.classList.contains('pdfcrowd-hidden'))
+                .toBe(true);
+            btnContentElements.forEach(el => {
+                expect(el.classList.contains('pdfcrowd-invisible'))
+                    .toBe(false);
+            });
+        });
+
+        test('should hide spinner when X button clicked', () => {
+            btnConvert.disabled = true;
+            spinner.classList.remove('pdfcrowd-hidden');
+            btnContentElements.forEach(el => {
+                el.classList.add('pdfcrowd-invisible');
+            });
+            titleOverlay.style.display = 'flex';
+
+            setupCleanupHandlers();
+
+            const xBtn = titleOverlay.querySelectorAll(
+                '.pdfcrowd-close-btn'
+            )[0];
+            xBtn.click();
+
+            expect(titleOverlay.style.display).toBe('none');
+            expect(btnConvert.disabled).toBe(false);
+            expect(spinner.classList.contains('pdfcrowd-hidden'))
+                .toBe(true);
+            btnContentElements.forEach(el => {
+                expect(el.classList.contains('pdfcrowd-invisible'))
+                    .toBe(false);
+            });
+        });
+    });
 });

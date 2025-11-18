@@ -869,14 +869,15 @@ pdfcrowdChatGPT.init = function() {
                 let title = getTitle();
                 let filename = title;
 
-                function doConvert() {
-                    function cleanup() {
-                        btnConvert.disabled = false;
-                        spinner.classList.add('pdfcrowd-hidden');
-                        for(let i = 0; i < btnElems.length; i++) {
-                            btnElems[i].classList.remove('pdfcrowd-invisible');
-                        }
+                function cleanup() {
+                    btnConvert.disabled = false;
+                    spinner.classList.add('pdfcrowd-hidden');
+                    for(let i = 0; i < btnElems.length; i++) {
+                        btnElems[i].classList.remove('pdfcrowd-invisible');
                     }
+                }
+
+                function doConvert() {
 
                     const data = {
                         jpeg_quality: 70,
@@ -944,6 +945,14 @@ pdfcrowdChatGPT.init = function() {
                             }
                             doConvert();
                         };
+                    const titleCancelBtns = dlgTitle.querySelectorAll(
+                        '.pdfcrowd-close-btn');
+                    titleCancelBtns.forEach(btn => {
+                        btn.onclick = function() {
+                            dlgTitle.style.display = 'none';
+                            cleanup();
+                        };
+                    });
                 } else {
                     doConvert();
                 }
