@@ -1,52 +1,21 @@
-pdfcrowdChatGPT.compressString = function(str) {
-    return new Promise((resolve, reject) => {
-        const stream = new Blob([str])
-            .stream()
-            .pipeThrough(new CompressionStream('gzip'));
+pdfcrowdChatGPT.MAX_MESSAGE_BYTES = 64 * 1024 * 1024;
 
-        new Response(stream).arrayBuffer()
-            .then(buffer => {
-                const uint8Array = new Uint8Array(buffer);
-                let binaryString = '';
-                for(let i = 0; i < uint8Array.length; i++) {
-                    binaryString += String.fromCharCode(uint8Array[i]);
-                }
-                resolve(btoa(binaryString));
-            })
-            .catch(reject);
-    });
-};
-
-pdfcrowdChatGPT.createMessage = function(data, fileName, isCompressed) {
-    return {
-        contentScriptQuery: 'postData',
-        url: pdfcrowdChatGPT.pdfcrowdAPI,
-        username: pdfcrowdChatGPT.username,
-        apiKey: pdfcrowdChatGPT.apiKey,
-        data: data,
-        fileName: fileName,
-        isCompressed: isCompressed || false
-    };
-};
-
-pdfcrowdChatGPT.calculateMessageSize = function(message) {
-    return new TextEncoder().encode(JSON.stringify(message)).length;
-};
-
-pdfcrowdChatGPT.handleResponse = function(response, fileName, fnCleanup) {
-    fnCleanup();
-
-    if(response.status != 200) {
-        pdfcrowdChatGPT.showError(response.status, response.message);
-    } else {
-        pdfcrowdChatGPT.saveBlob(response.url, fileName);
-    }
-};
-
-pdfcrowdChatGPT.sendMessage = function(message, fileName, fnCleanup) {
+pdfcrowdChatGPT.sendMessageToBackground = function(
+    message,
+    fileName,
+    fnCleanup
+) {
     try {
         chrome.runtime.sendMessage(message, response => {
-            pdfcrowdChatGPT.handleResponse(response, fileName, fnCleanup);
+            fnCleanup();
+            if(response.status != 200) {
+                pdfcrowdChatGPT.showError(
+                    response.status,
+                    response.message
+                );
+            } else {
+                pdfcrowdChatGPT.saveBlob(response.url, fileName);
+            }
         });
     } catch(error) {
         fnCleanup();
@@ -59,55 +28,98 @@ pdfcrowdChatGPT.sendMessage = function(message, fileName, fnCleanup) {
     }
 };
 
-pdfcrowdChatGPT.showSizeError = function(fnCleanup) {
-    fnCleanup();
-    pdfcrowdChatGPT.showError(
-        null,
-        "The selected ChatGPT conversation is too large to process " +
-        "in one step. <br>Please select a smaller portion of the " +
-        "conversation and try again.",
-        true
-    );
+pdfcrowdChatGPT.createGzip = function(data) {
+    return new Promise((resolve, reject) => {
+        const htmlContent = data.text;
+        const encoder = new TextEncoder();
+        const htmlBytes = encoder.encode(htmlContent);
+        const fileSize = htmlBytes.length;
+
+        const stream = new Blob([htmlBytes])
+            .stream()
+            .pipeThrough(new CompressionStream('gzip'));
+
+        new Response(stream).arrayBuffer()
+            .then(gzippedData => {
+                const gzipped = new Uint8Array(gzippedData);
+
+                let base64String;
+                try {
+                    let binaryString = '';
+                    const chunkSize = 8192;
+                    for (let i = 0; i < gzipped.length; i += chunkSize) {
+                        const chunk = gzipped.subarray(
+                            i,
+                            Math.min(i + chunkSize, gzipped.length)
+                        );
+                        binaryString += String.fromCharCode(...chunk);
+                    }
+
+                    base64String = btoa(binaryString);
+                } catch(error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve({
+                    gzipBase64: base64String,
+                    originalSize: fileSize,
+                    compressedSize: gzipped.length,
+                    otherParams: Object.keys(data)
+                        .filter(k => k !== 'text')
+                        .reduce((obj, k) => {
+                            obj[k] = data[k];
+                            return obj;
+                        }, {})
+                });
+            })
+            .catch(reject);
+    });
 };
 
 pdfcrowdChatGPT.doRequest = function(data, fileName, fnCleanup) {
-    const maxBytes = 64 * 1024 * 1024;
-    const message = pdfcrowdChatGPT.createMessage(data, fileName, false);
-    const messageSize = pdfcrowdChatGPT.calculateMessageSize(message);
+    pdfcrowdChatGPT.createGzip(data)
+        .then(result => {
+            const compressedMessage = {
+                contentScriptQuery: 'postData',
+                url: pdfcrowdChatGPT.pdfcrowdAPI,
+                username: pdfcrowdChatGPT.username,
+                apiKey: pdfcrowdChatGPT.apiKey,
+                gzipFile: result.gzipBase64,
+                params: result.otherParams,
+                fileName: fileName
+            };
 
-    if(messageSize >= maxBytes) {
-        pdfcrowdChatGPT.compressString(JSON.stringify(data))
-            .then(compressed => {
-                const compressedMessage = pdfcrowdChatGPT.createMessage(
-                    {compressed: compressed},
-                    fileName,
-                    true
-                );
+            const compressedSize = new TextEncoder()
+                .encode(JSON.stringify(compressedMessage))
+                .length;
 
-                const compressedSize =
-                    pdfcrowdChatGPT.calculateMessageSize(compressedMessage);
-
-                if(compressedSize >= maxBytes) {
-                    pdfcrowdChatGPT.showSizeError(fnCleanup);
-                } else {
-                    pdfcrowdChatGPT.sendMessage(
-                        compressedMessage,
-                        fileName,
-                        fnCleanup
-                    );
-                }
-            })
-            .catch(compressionError => {
+            if(compressedSize >= pdfcrowdChatGPT.MAX_MESSAGE_BYTES) {
                 fnCleanup();
                 pdfcrowdChatGPT.showError(
                     null,
-                    "Failed to compress message: " +
-                    `<br><small>${compressionError}</small>`
+                    "The selected ChatGPT conversation is too large " +
+                    "to process even after compression. <br>Please " +
+                    "select a smaller portion of the conversation " +
+                    "and try again.",
+                    true
                 );
-            });
-    } else {
-        pdfcrowdChatGPT.sendMessage(message, fileName, fnCleanup);
-    }
+            } else {
+                pdfcrowdChatGPT.sendMessageToBackground(
+                    compressedMessage,
+                    fileName,
+                    fnCleanup
+                );
+            }
+        })
+        .catch(error => {
+            fnCleanup();
+            pdfcrowdChatGPT.showError(
+                null,
+                "Failed to create GZIP: " +
+                `<br><small>${error}</small>`
+            );
+        });
 };
 
 pdfcrowdChatGPT.init();

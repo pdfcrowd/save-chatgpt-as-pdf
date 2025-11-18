@@ -1,5 +1,5 @@
 Changes in 3.4
-- Added: automatic gzip compression for large conversations that exceed the 64MB message size limit
+- Improved: ability to process larger conversations with better performance and responsiveness
 - Changed: icons are now excluded by default for new installations (existing users unaffected)
 
 Changes in 3.3
