@@ -30,50 +30,46 @@ pdfcrowdChatGPT.sendMessageToBackground = function(
 
 pdfcrowdChatGPT.createGzip = function(data) {
     return new Promise((resolve, reject) => {
-        const htmlContent = data.text;
-        const encoder = new TextEncoder();
-        const htmlBytes = encoder.encode(htmlContent);
-        const fileSize = htmlBytes.length;
+        try {
+            const htmlContent = data.text;
+            const encoder = new TextEncoder();
+            const htmlBytes = encoder.encode(htmlContent);
+            const fileSize = htmlBytes.length;
 
-        const stream = new Blob([htmlBytes])
-            .stream()
-            .pipeThrough(new CompressionStream('gzip'));
+            const gzipped = fflate.gzipSync(htmlBytes);
 
-        new Response(stream).arrayBuffer()
-            .then(gzippedData => {
-                const gzipped = new Uint8Array(gzippedData);
-
-                let base64String;
-                try {
-                    let binaryString = '';
-                    const chunkSize = 8192;
-                    for (let i = 0; i < gzipped.length; i += chunkSize) {
-                        const chunk = gzipped.subarray(
-                            i,
-                            Math.min(i + chunkSize, gzipped.length)
-                        );
-                        binaryString += String.fromCharCode(...chunk);
-                    }
-
-                    base64String = btoa(binaryString);
-                } catch(error) {
-                    reject(error);
-                    return;
+            let base64String;
+            try {
+                let binaryString = '';
+                const chunkSize = 8192;
+                for (let i = 0; i < gzipped.length; i += chunkSize) {
+                    const chunk = gzipped.subarray(
+                        i,
+                        Math.min(i + chunkSize, gzipped.length)
+                    );
+                    binaryString += String.fromCharCode(...chunk);
                 }
 
-                resolve({
-                    gzipBase64: base64String,
-                    originalSize: fileSize,
-                    compressedSize: gzipped.length,
-                    otherParams: Object.keys(data)
-                        .filter(k => k !== 'text')
-                        .reduce((obj, k) => {
-                            obj[k] = data[k];
-                            return obj;
-                        }, {})
-                });
-            })
-            .catch(reject);
+                base64String = btoa(binaryString);
+            } catch(error) {
+                reject(error);
+                return;
+            }
+
+            resolve({
+                gzipBase64: base64String,
+                originalSize: fileSize,
+                compressedSize: gzipped.length,
+                otherParams: Object.keys(data)
+                    .filter(k => k !== 'text')
+                    .reduce((obj, k) => {
+                        obj[k] = data[k];
+                        return obj;
+                    }, {})
+            });
+        } catch(error) {
+            reject(error);
+        }
     });
 };
 
