@@ -51,16 +51,6 @@ function tryCompress(htmlContent) {
                         [gzipped],
                         {type: 'application/gzip'}
                     );
-                    const ratio = (
-                        (1 - gzipped.length / htmlBytes.length) * 100
-                    ).toFixed(1);
-                    console.log(
-                        '[ChatGPT to PDF] Compression successful:',
-                        htmlBytes.length,
-                        '->',
-                        gzipped.length,
-                        'bytes (' + ratio + '% reduction)'
-                    );
                     resolve({
                         blob: gzipBlob,
                         filename: 'index.html.gz'
@@ -77,11 +67,6 @@ function prepareFile(htmlContent) {
     return tryCompress(htmlContent)
         .then(result => result)
         .catch(error => {
-            console.warn(
-                '[ChatGPT to PDF] Compression not available,',
-                'sending uncompressed (' + htmlContent.length + ' bytes):',
-                error.message
-            );
             const htmlBlob = new Blob([htmlContent], {type: 'text/html'});
             return {
                 blob: htmlBlob,
@@ -126,29 +111,11 @@ chrome.runtime.onMessage.addListener(
                 const now = Date.now();
                 const SESSION_TIMEOUT = 10 * 60 * 1000;
 
-                let cleanedCount = 0;
                 for(let id in sessions) {
                     if(now - sessions[id].createdAt > SESSION_TIMEOUT) {
                         delete sessions[id];
-                        cleanedCount++;
                     }
                 }
-
-                if(cleanedCount > 0) {
-                    console.log(
-                        '[ChatGPT to PDF] Cleaned up',
-                        cleanedCount,
-                        'abandoned session(s)'
-                    );
-                }
-
-                console.log(
-                    '[ChatGPT to PDF] Creating new session:',
-                    sessionId,
-                    'expecting',
-                    request.totalChunks,
-                    'chunks'
-                );
 
                 sessions[sessionId] = {
                     chunks: new Array(request.totalChunks),
@@ -169,10 +136,6 @@ chrome.runtime.onMessage.addListener(
             const session = sessions[sessionId];
 
             if(!session) {
-                console.error(
-                    '[ChatGPT to PDF] Session not found:',
-                    sessionId
-                );
                 sendResponse({
                     status: 'error',
                     message: 'Session not found'
@@ -180,35 +143,14 @@ chrome.runtime.onMessage.addListener(
                 return true;
             }
 
-            console.log(
-                '[ChatGPT to PDF] Assembling',
-                session.chunks.length,
-                'chunks for session:',
-                sessionId
-            );
-
             const htmlContent = session.chunks.join('');
             delete sessions[sessionId];
 
-            console.log(
-                '[ChatGPT to PDF] Total HTML size:',
-                htmlContent.length,
-                'bytes'
-            );
-
             prepareFile(htmlContent)
                 .then(fileData => {
-                    console.log(
-                        '[ChatGPT to PDF] Sending to API:',
-                        fileData.filename
-                    );
                     sendToAPI(fileData, request, sendResponse);
                 })
                 .catch(error => {
-                    console.error(
-                        '[ChatGPT to PDF] File preparation failed:',
-                        error
-                    );
                     sendResponse({
                         status: 'error',
                         message: error.toString()
