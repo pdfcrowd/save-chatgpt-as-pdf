@@ -1,47 +1,91 @@
-pdfcrowdChatGPT.doRequest = function(data, fileName, fnCleanup) {
-    // 64 MB limit in sendMessage
-    const maxBytes = 64 * 1024 * 1024;
+pdfcrowdChatGPT.CHUNK_SIZE = 10 * 1024 * 1024;
 
-    const message = {
-        contentScriptQuery: 'postData',
-        url: pdfcrowdChatGPT.pdfcrowdAPI,
-        username: pdfcrowdChatGPT.username,
-        apiKey: pdfcrowdChatGPT.apiKey,
-        data: data,
-        fileName: fileName
+pdfcrowdChatGPT.sendChunkedData = function(
+    htmlContent,
+    params,
+    fileName,
+    fnCleanup
+) {
+    const sessionId = 'session_' + Date.now() + '_' + Math.random();
+    const chunks = [];
+    const chunkSize = pdfcrowdChatGPT.CHUNK_SIZE;
+
+    for (let i = 0; i < htmlContent.length; i += chunkSize) {
+        chunks.push(htmlContent.substring(i, i + chunkSize));
+    }
+
+    const totalChunks = chunks.length;
+    let currentChunk = 0;
+
+    const sendNextChunk = function() {
+        if (currentChunk >= totalChunks) {
+            chrome.runtime.sendMessage({
+                contentScriptQuery: 'processData',
+                sessionId: sessionId,
+                url: pdfcrowdChatGPT.pdfcrowdAPI,
+                username: pdfcrowdChatGPT.username,
+                apiKey: pdfcrowdChatGPT.apiKey,
+                params: params,
+                fileName: fileName
+            }, response => {
+                fnCleanup();
+                if (response.status != 200) {
+                    pdfcrowdChatGPT.showError(
+                        response.status,
+                        response.message
+                    );
+                } else {
+                    pdfcrowdChatGPT.saveBlob(response.url, fileName);
+                }
+            });
+            return;
+        }
+
+        chrome.runtime.sendMessage({
+            contentScriptQuery: 'uploadChunk',
+            sessionId: sessionId,
+            chunkIndex: currentChunk,
+            totalChunks: totalChunks,
+            chunkData: chunks[currentChunk]
+        }, response => {
+            if (response && response.success) {
+                currentChunk++;
+                sendNextChunk();
+            } else {
+                fnCleanup();
+                pdfcrowdChatGPT.showError(
+                    null,
+                    "Failed to upload chunk " + currentChunk +
+                    `<br><small>${response.error}</small>`
+                );
+            }
+        });
     };
 
-    // Calculate JSON byte size
-    const messageSize = new TextEncoder()
-        .encode(JSON.stringify(message))
-        .length;
-
-    if(messageSize >= maxBytes) {
+    try {
+        sendNextChunk();
+    } catch(error) {
         fnCleanup();
         pdfcrowdChatGPT.showError(
             null,
-            "The selected ChatGPT conversation is too large to process in " +
-            "one step. <br>Please select a smaller portion of the " +
-            "conversation and try again.",
-            true
+            "Failed to send data: " +
+            `<br><small>${error}</small>`
         );
-        return;
     }
+};
 
-    try {
-        chrome.runtime.sendMessage(message, response => {
-            fnCleanup();
-
-            if(response.status != 200) {
-                pdfcrowdChatGPT.showError(response.status, response.message);
-            } else {
-                pdfcrowdChatGPT.saveBlob(response.url, fileName);
-            }
-        });
-    } catch(error) {
-        fnCleanup();
-        pdfcrowdChatGPT.showError(null, `Please refresh the page. The 'ChatGPT to PDF by PDFCrowd' extension has likely been updated.<br><small>${error}</small>`);
-    }
+pdfcrowdChatGPT.doRequest = function(
+    htmlContent,
+    params,
+    fileName,
+    fnCleanup
+) {
+    pdfcrowdChatGPT.sendChunkedData(
+        htmlContent,
+        params,
+        fileName,
+        fnCleanup
+    );
 };
 
 pdfcrowdChatGPT.init();

@@ -48,6 +48,8 @@ function restoreOptions() {
 
 function resetOptions(event) {
     const options = pdfcrowdShared.defaultOptions;
+    options.no_icons = true;
+
     const keys = Object.getOwnPropertyNames(options);
     keys.forEach(key => {
         const item = document.getElementById(key);

@@ -567,8 +567,10 @@ pdfcrowdChatGPT.init = function() {
             button.parentNode.removeChild(button);
         });
 
-        // remove all scripts and styles
-        element.querySelectorAll('script, style').forEach(el => el.remove());
+        // remove scripts, styles, and unnecessary elements
+        element.querySelectorAll(
+            'script, style, .absolute.z-0, .absolute.z-1, #AIPRM__sidebar'
+        ).forEach(el => el.remove());
 
         // solve expired images
         element.querySelectorAll('.grid img').forEach(img => {
@@ -664,56 +666,208 @@ pdfcrowdChatGPT.init = function() {
         return title;
     }
 
-    function convert(event) {
-        pdfcrowdShared.getOptions(function(options) {
-            let main = document.getElementsByTagName('main');
-            main = main.length ? main[0] : document.querySelector('div.grow');
-            const main_clone = prepareContent(main);
-            const h1 = main_clone.querySelector('h1');
+    function applyQuestionStyles(main_clone, options) {
+        let questions = null;
 
-            let questions = null;
-            if(options.q_color !== 'default') {
+        if(options.q_color !== 'default') {
+            questions = main_clone.querySelectorAll(
+                '[data-message-author-role="user"]');
+            const color_val = options.q_color === 'none'
+                  ? 'unset' : options.q_color_picker;
+            questions.forEach(function(question) {
+                question.style.backgroundColor = color_val;
+                if(color_val === 'unset') {
+                    question.style.paddingLeft = 0;
+                    question.style.paddingRight = 0;
+                }
+            });
+        }
+
+        if(options.q_fg_color !== 'default') {
+            if(!questions) {
                 questions = main_clone.querySelectorAll(
                     '[data-message-author-role="user"]');
-                const color_val = options.q_color === 'none'
-                      ? 'unset' : options.q_color_picker;
-                questions.forEach(function(question) {
-                    question.style.backgroundColor = color_val;
-                    if(color_val === 'unset') {
-                        question.style.paddingLeft = 0;
-                        question.style.paddingRight = 0;
+            }
+            questions.forEach(function(question) {
+                question.style.color = options.q_fg_color_picker;
+            });
+        }
+    }
+
+    function getTriggerButton(event) {
+        let trigger = event.target;
+        if(trigger.id) {
+            localStorage.setItem('pdfcrowd-btn', trigger.id);
+        } else {
+            const lastBtn = localStorage.getItem('pdfcrowd-btn');
+            if(lastBtn) {
+                const btnElement = document.getElementById(lastBtn);
+                if(btnElement) {
+                    trigger = btnElement;
+                }
+            }
+        }
+        return trigger;
+    }
+
+    function applyConversionOptions(data, trigger) {
+        const convOptions = JSON.parse(
+            trigger.dataset.convOptions || '{}');
+
+        let singlePagePrint = false;
+        for(let key in convOptions) {
+            const convOptionValue = convOptions[key];
+            data[key] = convOptionValue;
+            if(key === 'page_height' && convOptionValue === '-1') {
+                singlePagePrint = true;
+            }
+        }
+
+        if(!('viewport_width' in convOptions)) {
+            data.viewport_width = 800;
+        }
+
+        return singlePagePrint;
+    }
+
+    function applyMarginSettings(data, options) {
+        switch(options.margins) {
+        case 'minimal':
+            data.no_margins = true;
+            break;
+        case 'custom':
+            data.margin_left = options.margin_left || 0;
+            data.margin_right = options.margin_right || 0;
+            data.margin_top = options.margin_top || 0;
+            data.margin_bottom = options.margin_bottom || 0;
+            break;
+        default:
+            data.margin_bottom = '12px';
+        }
+    }
+
+    function buildCssClasses(options, singlePagePrint) {
+        let classes = singlePagePrint ? 'pdfcrowd-single-page ' : '';
+
+        if(options.theme === 'dark' ||
+           (options.theme === '' && !isLight(document.body))) {
+            classes += 'pdfcrowd-dark ';
+        }
+
+        if(options.no_questions) {
+            classes += 'pdfcrowd-no-questions ';
+        }
+
+        if(options.no_icons) {
+            classes += 'pdfcrowd-no-icons ';
+        }
+
+        if(options.page_break === 'after' && !singlePagePrint) {
+            classes += 'pdfcrowd-break-after ';
+        }
+
+        if(options.q_align) {
+            classes += 'pdfcrowd-q-align-' + options.q_align + ' ';
+        }
+
+        if(options.q_rounded) {
+            classes += 'pdfcrowd-q-rounded ';
+        }
+
+        if(options.toc && !options.no_questions) {
+            if(options.toc === 'numbering') {
+                classes += 'pdfcrowd-use-toc-numbering ';
+            }
+        }
+
+        return classes;
+    }
+
+    function buildTocHtml(options) {
+        if(options.toc && !options.no_questions) {
+            return '<div id="pdfcrowd-toc"></div>';
+        }
+        return '';
+    }
+
+    function buildDatetimeHtml(options) {
+        if(options.datetime_format &&
+            options.datetime_format !== 'none') {
+            const now = new Date();
+            const datetimeStr =
+                  options.datetime_format === 'date_only'
+                  ? now.toLocaleDateString()
+                  : now.toLocaleString();
+            return `<div class="pdfcrowd-datetime">${datetimeStr}</div>`;
+        }
+        return '';
+    }
+
+    function extractModelName(element) {
+        function traverse(node) {
+            let text = '';
+
+            node.childNodes.forEach(child => {
+                let childText = '';
+                if (child.nodeType === Node.TEXT_NODE) {
+                    childText = child.textContent.trim();
+                } else if (child.nodeType === Node.ELEMENT_NODE) {
+                    childText = traverse(child);
+                }
+
+                if(childText) {
+                    if(text) {
+                        text += ' - ';
                     }
-                });
-            }
-
-            if(options.q_fg_color !== 'default') {
-                if(!questions) {
-                    questions = main_clone.querySelectorAll(
-                        '[data-message-author-role="user"]');
+                    text += childText;
                 }
-                questions.forEach(function(question) {
-                    question.style.color = options.q_fg_color_picker;
-                });
+            });
+
+            return text;
+        }
+
+        return traverse(element).trim();
+    }
+
+    function buildModelNameHtml(options) {
+        if(options.model_name) {
+            const model_el = document.querySelector(
+                '#page-header .text-lg');
+            if(model_el) {
+                return '<div class="pdfcrowd-model-name">' +
+                    extractModelName(model_el) +
+                    '</div>';
             }
+        }
+        return '';
+    }
 
-            let title = getTitle();
-            let filename = title;
+    function convert(event) {
+        document.getElementById('pdfcrowd-extra-btns').classList.add(
+            'pdfcrowd-hidden');
 
-            function doConvert() {
-                let trigger = event.target;
-                document.getElementById('pdfcrowd-extra-btns').classList.add(
-                    'pdfcrowd-hidden');
+        const btnConvert = document.getElementById(
+            'pdfcrowd-convert-main');
+        btnConvert.disabled = true;
+        const spinner = document.getElementById('pdfcrowd-spinner');
+        spinner.classList.remove('pdfcrowd-hidden');
+        const btnElems = document.getElementsByClassName(
+            'pdfcrowd-btn-content');
+        for(let i = 0; i < btnElems.length; i++) {
+            btnElems[i].classList.add('pdfcrowd-invisible');
+        }
 
-                const btnConvert = document.getElementById(
-                    'pdfcrowd-convert-main');
-                btnConvert.disabled = true;
-                const spinner = document.getElementById('pdfcrowd-spinner');
-                spinner.classList.remove('pdfcrowd-hidden');
-                const btnElems = document.getElementsByClassName(
-                    'pdfcrowd-btn-content');
-                for(let i = 0; i < btnElems.length; i++) {
-                    btnElems[i].classList.add('pdfcrowd-invisible');
-                }
+        setTimeout(function() {
+            pdfcrowdShared.getOptions(function(options) {
+                let main = document.getElementsByTagName('main');
+                main = main.length ? main[0] :
+                    document.querySelector('div.grow');
+                const main_clone = prepareContent(main);
+
+                applyQuestionStyles(main_clone, options);
+
+                let title = getTitle();
+                let filename = title;
 
                 function cleanup() {
                     btnConvert.disabled = false;
@@ -723,183 +877,88 @@ pdfcrowdChatGPT.init = function() {
                     }
                 }
 
-                const data = {
-                    jpeg_quality: 70,
-                    image_dpi: 150,
-                    convert_images_to_jpeg: 'all',
-                    title: title,
-                    rendering_mode: 'viewport',
-                    smart_scaling_mode: 'viewport-fit'
-                };
+                function doConvert() {
 
-                if(trigger.id) {
-                    localStorage.setItem('pdfcrowd-btn', trigger.id);
-                } else {
-                    let lastBtn = localStorage.getItem('pdfcrowd-btn');
-                    if(lastBtn) {
-                        lastBtn = document.getElementById(lastBtn);
-                        if(lastBtn) {
-                            trigger = lastBtn;
-                        }
-                    }
-                }
-
-                const convOptions = JSON.parse(
-                    trigger.dataset.convOptions || '{}');
-
-                let singlePagePrint = false;
-                for(let key in convOptions) {
-                    const convOptionValue = convOptions[key];
-                    data[key] = convOptionValue;
-                    if(key === 'page_height' && convOptionValue === '-1') {
-                        singlePagePrint = true;
-                    }
-                }
-
-                if(!('viewport_width' in convOptions)) {
-                    data.viewport_width = 800;
-                }
-
-                switch(options.margins) {
-                case 'minimal':
-                    data.no_margins = true;
-                    break;
-                case 'custom':
-                    data.margin_left = options.margin_left || 0;
-                    data.margin_right = options.margin_right || 0;
-                    data.margin_top = options.margin_top || 0;
-                    data.margin_bottom = options.margin_bottom || 0;
-                    break;
-                default:
-                    data.margin_bottom = '12px';
-                }
-
-                let classes = singlePagePrint ? 'pdfcrowd-single-page ' : '';
-                if(options.theme === 'dark' ||
-                   (options.theme === '' && !isLight(document.body))) {
-                    classes += 'pdfcrowd-dark ';
-                    data.page_background_color = '333333';
-                }
-
-                if(options.zoom) {
-                    data.scale_factor = options.zoom;
-                }
-
-                if(options.no_questions) {
-                    classes += 'pdfcrowd-no-questions ';
-                }
-
-                if(options.no_icons) {
-                    classes += 'pdfcrowd-no-icons ';
-                }
-
-                if(options.page_break === 'after' && !singlePagePrint) {
-                    classes += 'pdfcrowd-break-after ';
-                }
-
-                if(options.q_align) {
-                    classes += 'pdfcrowd-q-align-' + options.q_align + ' ';
-                }
-
-                if(options.q_rounded) {
-                    classes += 'pdfcrowd-q-rounded ';
-                }
-
-                let toc = '';
-                if(options.toc && !options.no_questions) {
-                    if(options.toc === 'numbering') {
-                        classes += 'pdfcrowd-use-toc-numbering ';
-                    }
-                    toc = '<div id="pdfcrowd-toc"></div>';
-                }
-
-                let datetimeHtml = '';
-                if (options.datetime_format &&
-                    options.datetime_format !== 'none') {
-                    const now = new Date();
-                    const datetimeStr =
-                          options.datetime_format === 'date_only'
-                          ? now.toLocaleDateString()
-                          : now.toLocaleString();
-                    datetimeHtml =
-                        `<div class="pdfcrowd-datetime">${datetimeStr}</div>`;
-                }
-
-                const h1_style =
-                    options.title_mode === 'none' ? 'hidden' : '';
-
-                // do not use H1 from document as it may be in the content
-                const body = `<h1 class="main-title ${h1_style}">${title}</h1>`
-                        + datetimeHtml + toc + main_clone.outerHTML;
-
-                function getModelName(element) {
-                    function traverse(node) {
-                        let text = '';
-
-                        node.childNodes.forEach(child => {
-                            let childText = '';
-                            if (child.nodeType === Node.TEXT_NODE) {
-                                childText = child.textContent.trim();
-                            } else if (child.nodeType === Node.ELEMENT_NODE) {
-                                childText = traverse(child);
-                            }
-
-                            if(childText) {
-                                if(text) {
-                                    text += ' - ';
-                                }
-                                text += childText;
-                            }
-                        });
-
-                        return text;
-                    }
-
-                    return traverse(element).trim();
-                }
-
-                let model_name = '';
-                if(options.model_name) {
-                    const model_el = document.querySelector(
-                        '#page-header .text-lg');
-                    if(model_el) {
-                        model_name = '<div class="pdfcrowd-model-name">' +
-                            getModelName(model_el) +
-                            '</div>';
-                    }
-                }
-
-                const direction = document.documentElement.getAttribute(
-                    'dir') || 'ltr';
-                data.text = `<!DOCTYPE html><html><head>` +
-                    `<meta charSet="utf-8"/></head>` +
-                    `<body class="${classes}" dir="${direction}">` +
-                    `${model_name}${body}</body>`;
-
-                pdfcrowdChatGPT.doRequest(
-                    data, addPdfExtension(filename), cleanup);
-            }
-
-            if(options.title_mode === 'ask') {
-                const dlgTitle = document.getElementById(
-                    'pdfcrowd-title-overlay');
-                const titleInput = document.getElementById('pdfcrowd-title');
-                titleInput.value = title;
-                dlgTitle.style.display = 'flex';
-                titleInput.focus();
-                document.getElementById('pdfcrowd-title-convert')
-                    .onclick = function() {
-                        dlgTitle.style.display = 'none';
-                        title = titleInput.value.trim();
-                        if(title) {
-                            filename = title;
-                        }
-                        doConvert();
+                    const data = {
+                        jpeg_quality: 70,
+                        image_dpi: 150,
+                        convert_images_to_jpeg: 'all',
+                        title: title,
+                        rendering_mode: 'viewport',
+                        smart_scaling_mode: 'viewport-fit'
                     };
-            } else {
-                doConvert();
-            }
-        });
+
+                    const trigger = getTriggerButton(event);
+                    const singlePagePrint = applyConversionOptions(
+                        data,
+                        trigger
+                    );
+                    applyMarginSettings(data, options);
+
+                    const classes = buildCssClasses(options, singlePagePrint);
+                    if(options.theme === 'dark' ||
+                       (options.theme === '' && !isLight(document.body))) {
+                        data.page_background_color = '333333';
+                    }
+
+                    if(options.zoom) {
+                        data.scale_factor = options.zoom;
+                    }
+
+                    const toc = buildTocHtml(options);
+                    const datetimeHtml = buildDatetimeHtml(options);
+                    const h1_style = options.title_mode === 'none'
+                        ? 'hidden' : '';
+                    const body = `<h1 class="main-title ${h1_style}">` +
+                        `${title}</h1>` + datetimeHtml + toc +
+                        main_clone.outerHTML;
+
+                    const model_name = buildModelNameHtml(options);
+                    const direction = document.documentElement.getAttribute(
+                        'dir') || 'ltr';
+
+                    const htmlContent = `<!DOCTYPE html><html><head>` +
+                        `<meta charSet="utf-8"/></head>` +
+                        `<body class="${classes}" dir="${direction}">` +
+                        `${model_name}${body}</body>`;
+
+                    pdfcrowdChatGPT.doRequest(
+                        htmlContent,
+                        data,
+                        addPdfExtension(filename),
+                        cleanup
+                    );
+                }
+
+                if(options.title_mode === 'ask') {
+                    const dlgTitle = document.getElementById(
+                        'pdfcrowd-title-overlay');
+                    const titleInput = document.getElementById('pdfcrowd-title');
+                    titleInput.value = title;
+                    dlgTitle.style.display = 'flex';
+                    titleInput.focus();
+                    document.getElementById('pdfcrowd-title-convert')
+                        .onclick = function() {
+                            dlgTitle.style.display = 'none';
+                            title = titleInput.value.trim();
+                            if(title) {
+                                filename = title;
+                            }
+                            doConvert();
+                        };
+                    const titleCancelBtns = dlgTitle.querySelectorAll(
+                        '.pdfcrowd-close-btn');
+                    titleCancelBtns.forEach(btn => {
+                        btn.onclick = function() {
+                            dlgTitle.style.display = 'none';
+                            cleanup();
+                        };
+                    });
+                } else {
+                    doConvert();
+                }
+            });
+        }, 0);
     }
 
     function addPdfcrowdBlock() {
