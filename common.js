@@ -2,7 +2,7 @@
 
 const pdfcrowdChatGPT = {};
 
-pdfcrowdChatGPT.pdfcrowdAPI = 'https://api.pdfcrowd.com/convert/24.04/';
+pdfcrowdChatGPT.pdfcrowdAPI = 'https://development-api.pdfcrowd.com/convert/24.04/';
 pdfcrowdChatGPT.username = 'chat-gpt';
 pdfcrowdChatGPT.apiKey = '29d211b1f6924c22b7a799b4e8fecb7e';
 
@@ -917,12 +917,13 @@ pdfcrowdChatGPT.init = function() {
                     const direction = document.documentElement.getAttribute(
                         'dir') || 'ltr';
 
-                    data.text = `<!DOCTYPE html><html><head>` +
+                    const htmlContent = `<!DOCTYPE html><html><head>` +
                         `<meta charSet="utf-8"/></head>` +
                         `<body class="${classes}" dir="${direction}">` +
                         `${model_name}${body}</body>`;
 
                     pdfcrowdChatGPT.doRequest(
+                        htmlContent,
                         data,
                         addPdfExtension(filename),
                         cleanup

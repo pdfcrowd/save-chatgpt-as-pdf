@@ -1,18 +1,11 @@
+const sessions = {};
+
 function blobToDataURL(blob, callback) {
     const reader = new FileReader();
     reader.onload = function(e) {
         callback(e.target.result);
     };
     reader.readAsDataURL(blob);
-}
-
-function base64ToBlob(base64, mimeType) {
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return new Blob([bytes], {type: mimeType});
 }
 
 function handleAPIResponse(response, sendResponse) {
@@ -36,16 +29,74 @@ function handleAPIResponse(response, sendResponse) {
     }
 }
 
-function sendToAPI(data, request, sendResponse) {
+function tryCompress(htmlContent) {
+    return new Promise((resolve, reject) => {
+        if(typeof CompressionStream === 'undefined') {
+            reject(new Error('CompressionStream not available'));
+            return;
+        }
+
+        try {
+            const encoder = new TextEncoder();
+            const htmlBytes = encoder.encode(htmlContent);
+
+            const stream = new Blob([htmlBytes])
+                .stream()
+                .pipeThrough(new CompressionStream('gzip'));
+
+            new Response(stream).arrayBuffer()
+                .then(gzippedData => {
+                    const gzipped = new Uint8Array(gzippedData);
+                    const gzipBlob = new Blob(
+                        [gzipped],
+                        {type: 'application/gzip'}
+                    );
+                    const ratio = (
+                        (1 - gzipped.length / htmlBytes.length) * 100
+                    ).toFixed(1);
+                    console.log(
+                        '[ChatGPT to PDF] Compression successful:',
+                        htmlBytes.length,
+                        '->',
+                        gzipped.length,
+                        'bytes (' + ratio + '% reduction)'
+                    );
+                    resolve({
+                        blob: gzipBlob,
+                        filename: 'index.html.gz'
+                    });
+                })
+                .catch(reject);
+        } catch(error) {
+            reject(error);
+        }
+    });
+}
+
+function prepareFile(htmlContent) {
+    return tryCompress(htmlContent)
+        .then(result => result)
+        .catch(error => {
+            console.warn(
+                '[ChatGPT to PDF] Compression not available,',
+                'sending uncompressed (' + htmlContent.length + ' bytes):',
+                error.message
+            );
+            const htmlBlob = new Blob([htmlContent], {type: 'text/html'});
+            return {
+                blob: htmlBlob,
+                filename: 'index.html'
+            };
+        });
+}
+
+function sendToAPI(fileData, request, sendResponse) {
     const formData = new FormData();
 
-    for(let key in data) {
-        if(key === 'file' && data[key] instanceof Blob) {
-            formData.append(key, data[key], 'index.html.gz');
-        } else {
-            formData.append(key, data[key]);
-        }
+    for(let key in request.params) {
+        formData.append(key, request.params[key]);
     }
+    formData.append('file', fileData.blob, fileData.filename);
 
     fetch(request.url, {
         method: 'POST',
@@ -53,7 +104,8 @@ function sendToAPI(data, request, sendResponse) {
         responseType: 'blob',
         headers: {
             'Authorization': 'Basic ' + btoa(
-                request.username + ':' + request.apiKey)
+                request.username + ':' + request.apiKey
+            )
         }
     }).then(response => {
         handleAPIResponse(response, sendResponse);
@@ -67,13 +119,102 @@ function sendToAPI(data, request, sendResponse) {
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        if(request.contentScriptQuery == 'postData') {
-            const gzipBlob = base64ToBlob(
-                request.gzipFile,
-                'application/gzip'
+        if(request.contentScriptQuery == 'uploadChunk') {
+            const sessionId = request.sessionId;
+
+            if(!sessions[sessionId]) {
+                const now = Date.now();
+                const SESSION_TIMEOUT = 10 * 60 * 1000;
+
+                let cleanedCount = 0;
+                for(let id in sessions) {
+                    if(now - sessions[id].createdAt > SESSION_TIMEOUT) {
+                        delete sessions[id];
+                        cleanedCount++;
+                    }
+                }
+
+                if(cleanedCount > 0) {
+                    console.log(
+                        '[ChatGPT to PDF] Cleaned up',
+                        cleanedCount,
+                        'abandoned session(s)'
+                    );
+                }
+
+                console.log(
+                    '[ChatGPT to PDF] Creating new session:',
+                    sessionId,
+                    'expecting',
+                    request.totalChunks,
+                    'chunks'
+                );
+
+                sessions[sessionId] = {
+                    chunks: new Array(request.totalChunks),
+                    receivedChunks: 0,
+                    createdAt: now
+                };
+            }
+
+            sessions[sessionId].chunks[request.chunkIndex] = request.chunkData;
+            sessions[sessionId].receivedChunks++;
+
+            sendResponse({success: true});
+            return true;
+        }
+
+        if(request.contentScriptQuery == 'processData') {
+            const sessionId = request.sessionId;
+            const session = sessions[sessionId];
+
+            if(!session) {
+                console.error(
+                    '[ChatGPT to PDF] Session not found:',
+                    sessionId
+                );
+                sendResponse({
+                    status: 'error',
+                    message: 'Session not found'
+                });
+                return true;
+            }
+
+            console.log(
+                '[ChatGPT to PDF] Assembling',
+                session.chunks.length,
+                'chunks for session:',
+                sessionId
             );
-            const data = {...request.params, file: gzipBlob};
-            sendToAPI(data, request, sendResponse);
+
+            const htmlContent = session.chunks.join('');
+            delete sessions[sessionId];
+
+            console.log(
+                '[ChatGPT to PDF] Total HTML size:',
+                htmlContent.length,
+                'bytes'
+            );
+
+            prepareFile(htmlContent)
+                .then(fileData => {
+                    console.log(
+                        '[ChatGPT to PDF] Sending to API:',
+                        fileData.filename
+                    );
+                    sendToAPI(fileData, request, sendResponse);
+                })
+                .catch(error => {
+                    console.error(
+                        '[ChatGPT to PDF] File preparation failed:',
+                        error
+                    );
+                    sendResponse({
+                        status: 'error',
+                        message: error.toString()
+                    });
+                });
+
             return true;
         }
     }

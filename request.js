@@ -1,121 +1,119 @@
-pdfcrowdChatGPT.MAX_MESSAGE_BYTES = 64 * 1024 * 1024;
+pdfcrowdChatGPT.CHUNK_SIZE = 10 * 1024 * 1024;
 
-pdfcrowdChatGPT.sendMessageToBackground = function(
-    message,
+pdfcrowdChatGPT.sendChunkedData = function(
+    htmlContent,
+    params,
     fileName,
     fnCleanup
 ) {
-    try {
-        chrome.runtime.sendMessage(message, response => {
-            fnCleanup();
-            if(response.status != 200) {
-                pdfcrowdChatGPT.showError(
-                    response.status,
-                    response.message
-                );
+    const sessionId = 'session_' + Date.now() + '_' + Math.random();
+    const chunks = [];
+    const chunkSize = pdfcrowdChatGPT.CHUNK_SIZE;
+
+    for (let i = 0; i < htmlContent.length; i += chunkSize) {
+        chunks.push(htmlContent.substring(i, i + chunkSize));
+    }
+
+    const totalChunks = chunks.length;
+    let currentChunk = 0;
+
+    console.log(
+        '[ChatGPT to PDF] Starting upload:',
+        'HTML size:',
+        htmlContent.length,
+        'bytes,',
+        'Chunks:',
+        totalChunks,
+        'Session:',
+        sessionId
+    );
+
+    const sendNextChunk = function() {
+        if (currentChunk >= totalChunks) {
+            console.log(
+                '[ChatGPT to PDF] All chunks uploaded, requesting conversion'
+            );
+            chrome.runtime.sendMessage({
+                contentScriptQuery: 'processData',
+                sessionId: sessionId,
+                url: pdfcrowdChatGPT.pdfcrowdAPI,
+                username: pdfcrowdChatGPT.username,
+                apiKey: pdfcrowdChatGPT.apiKey,
+                params: params,
+                fileName: fileName
+            }, response => {
+                fnCleanup();
+                if (response.status != 200) {
+                    console.error(
+                        '[ChatGPT to PDF] Conversion failed:',
+                        response.status,
+                        response.message
+                    );
+                    pdfcrowdChatGPT.showError(
+                        response.status,
+                        response.message
+                    );
+                } else {
+                    console.log(
+                        '[ChatGPT to PDF] PDF generated successfully'
+                    );
+                    pdfcrowdChatGPT.saveBlob(response.url, fileName);
+                }
+            });
+            return;
+        }
+
+        console.log(
+            '[ChatGPT to PDF] Uploading chunk',
+            currentChunk + 1,
+            '/',
+            totalChunks
+        );
+        chrome.runtime.sendMessage({
+            contentScriptQuery: 'uploadChunk',
+            sessionId: sessionId,
+            chunkIndex: currentChunk,
+            totalChunks: totalChunks,
+            chunkData: chunks[currentChunk]
+        }, response => {
+            if (response && response.success) {
+                currentChunk++;
+                sendNextChunk();
             } else {
-                pdfcrowdChatGPT.saveBlob(response.url, fileName);
+                fnCleanup();
+                pdfcrowdChatGPT.showError(
+                    null,
+                    "Failed to upload chunk " + currentChunk +
+                    `<br><small>${response.error}</small>`
+                );
             }
         });
+    };
+
+    try {
+        sendNextChunk();
     } catch(error) {
         fnCleanup();
         pdfcrowdChatGPT.showError(
             null,
-            "Please refresh the page. The 'ChatGPT to PDF by " +
-            "PDFCrowd' extension has likely been " +
-            `updated.<br><small>${error}</small>`
+            "Failed to send data: " +
+            `<br><small>${error}</small>`
         );
     }
 };
 
-pdfcrowdChatGPT.createGzip = function(data) {
-    return new Promise((resolve, reject) => {
-        try {
-            const htmlContent = data.text;
-            const encoder = new TextEncoder();
-            const htmlBytes = encoder.encode(htmlContent);
-            const fileSize = htmlBytes.length;
-
-            const gzipped = fflate.gzipSync(htmlBytes);
-
-            let base64String;
-            try {
-                let binaryString = '';
-                const chunkSize = 8192;
-                for (let i = 0; i < gzipped.length; i += chunkSize) {
-                    const chunk = gzipped.subarray(
-                        i,
-                        Math.min(i + chunkSize, gzipped.length)
-                    );
-                    binaryString += String.fromCharCode(...chunk);
-                }
-
-                base64String = btoa(binaryString);
-            } catch(error) {
-                reject(error);
-                return;
-            }
-
-            resolve({
-                gzipBase64: base64String,
-                originalSize: fileSize,
-                compressedSize: gzipped.length,
-                otherParams: Object.keys(data)
-                    .filter(k => k !== 'text')
-                    .reduce((obj, k) => {
-                        obj[k] = data[k];
-                        return obj;
-                    }, {})
-            });
-        } catch(error) {
-            reject(error);
-        }
-    });
-};
-
-pdfcrowdChatGPT.doRequest = function(data, fileName, fnCleanup) {
-    pdfcrowdChatGPT.createGzip(data)
-        .then(result => {
-            const compressedMessage = {
-                contentScriptQuery: 'postData',
-                url: pdfcrowdChatGPT.pdfcrowdAPI,
-                username: pdfcrowdChatGPT.username,
-                apiKey: pdfcrowdChatGPT.apiKey,
-                gzipFile: result.gzipBase64,
-                params: result.otherParams,
-                fileName: fileName
-            };
-
-            const compressedSize = new TextEncoder()
-                .encode(JSON.stringify(compressedMessage))
-                .length;
-
-            if(compressedSize >= pdfcrowdChatGPT.MAX_MESSAGE_BYTES) {
-                fnCleanup();
-                pdfcrowdChatGPT.showError(
-                    null,
-                    "The selected ChatGPT conversation is too large " +
-                    "to process even after compression. <br>Please " +
-                    "select a smaller portion of the conversation " +
-                    "and try again.",
-                    true
-                );
-            } else {
-                pdfcrowdChatGPT.sendMessageToBackground(
-                    compressedMessage,
-                    fileName,
-                    fnCleanup
-                );
-            }
-        })
-        .catch(error => {
-            fnCleanup();
-            pdfcrowdChatGPT.showError(
-                null,
-                "Failed to create GZIP: " +
-                `<br><small>${error}</small>`
-            );
-        });
+pdfcrowdChatGPT.doRequest = function(
+    htmlContent,
+    params,
+    fileName,
+    fnCleanup
+) {
+    pdfcrowdChatGPT.sendChunkedData(
+        htmlContent,
+        params,
+        fileName,
+        fnCleanup
+    );
 };
 
 pdfcrowdChatGPT.init();

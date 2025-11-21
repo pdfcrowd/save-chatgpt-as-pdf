@@ -28,12 +28,7 @@
     "content_scripts": [
         {
             "matches": ["*://chatgpt.com/*", "*://chat.com/*"],
-            "js": [
-                "shared.js",
-                "common.js",
-                "fflate.min.js",
-                "request.js"
-            ]
+            "js": ["shared.js", "common.js", "request.js"]
         }
     ],
     "options_ui": {
