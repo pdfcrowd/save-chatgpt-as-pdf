@@ -17,8 +17,22 @@ pdfcrowdChatGPT.sendChunkedData = function(
     const totalChunks = chunks.length;
     let currentChunk = 0;
 
+    console.log(
+        '[ChatGPT to PDF] Starting upload:',
+        'HTML size:',
+        htmlContent.length,
+        'bytes,',
+        'Chunks:',
+        totalChunks,
+        'Session:',
+        sessionId
+    );
+
     const sendNextChunk = function() {
         if (currentChunk >= totalChunks) {
+            console.log(
+                '[ChatGPT to PDF] All chunks uploaded, requesting conversion'
+            );
             chrome.runtime.sendMessage({
                 contentScriptQuery: 'processData',
                 sessionId: sessionId,
@@ -30,17 +44,31 @@ pdfcrowdChatGPT.sendChunkedData = function(
             }, response => {
                 fnCleanup();
                 if (response.status != 200) {
+                    console.error(
+                        '[ChatGPT to PDF] Conversion failed:',
+                        response.status,
+                        response.message
+                    );
                     pdfcrowdChatGPT.showError(
                         response.status,
                         response.message
                     );
                 } else {
+                    console.log(
+                        '[ChatGPT to PDF] PDF generated successfully'
+                    );
                     pdfcrowdChatGPT.saveBlob(response.url, fileName);
                 }
             });
             return;
         }
 
+        console.log(
+            '[ChatGPT to PDF] Uploading chunk',
+            currentChunk + 1,
+            '/',
+            totalChunks
+        );
         chrome.runtime.sendMessage({
             contentScriptQuery: 'uploadChunk',
             sessionId: sessionId,
