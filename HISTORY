@@ -1,5 +1,5 @@
 Changes in 3.4
-- Improved: ability to process larger conversations with better performance and responsiveness
+- Improved: ability to process larger conversations
 - Changed: icons are now excluded by default for new installations (existing users unaffected)
 
 Changes in 3.3

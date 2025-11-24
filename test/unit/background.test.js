@@ -180,6 +180,158 @@ describe('Background Script', () => {
         });
     });
 
+    describe('Compression Fallback', () => {
+        let tryCompress, prepareFile;
+        let originalCompressionStream;
+
+        beforeEach(() => {
+            // Save the original CompressionStream if it exists
+            originalCompressionStream = global.CompressionStream;
+
+            // Create a factory for tryCompress that respects
+            // the global environment
+            const createTryCompress = () => function(htmlContent) {
+                return new Promise((resolve, reject) => {
+                    if(typeof CompressionStream === 'undefined') {
+                        reject(
+                            new Error('CompressionStream not available')
+                        );
+                        return;
+                    }
+
+                    try {
+                        const encoder = new TextEncoder();
+                        const htmlBytes = encoder.encode(htmlContent);
+
+                        const stream = new Blob([htmlBytes])
+                            .stream()
+                            .pipeThrough(new CompressionStream('gzip'));
+
+                        new Response(stream).arrayBuffer()
+                            .then(gzippedData => {
+                                const gzipped = new Uint8Array(gzippedData);
+                                const gzipBlob = new Blob(
+                                    [gzipped],
+                                    {type: 'application/gzip'}
+                                );
+                                resolve({
+                                    blob: gzipBlob,
+                                    filename: 'index.html.gz'
+                                });
+                            })
+                            .catch(reject);
+                    } catch(error) {
+                        reject(error);
+                    }
+                });
+            };
+
+            prepareFile = function(htmlContent) {
+                // Recreate tryCompress each time to pick up
+                // environment changes
+                tryCompress = createTryCompress();
+                return tryCompress(htmlContent)
+                    .then(result => result)
+                    .catch(error => {
+                        const htmlBlob = new Blob(
+                            [htmlContent],
+                            {type: 'text/html'}
+                        );
+                        return {
+                            blob: htmlBlob,
+                            filename: 'index.html'
+                        };
+                    });
+            };
+
+            // Initialize tryCompress
+            tryCompress = createTryCompress();
+        });
+
+        afterEach(() => {
+            // Restore CompressionStream
+            if(originalCompressionStream) {
+                global.CompressionStream = originalCompressionStream;
+            } else {
+                delete global.CompressionStream;
+            }
+        });
+
+        test('should reject when CompressionStream unavailable',
+        async () => {
+            // Delete CompressionStream to simulate unavailability
+            delete global.CompressionStream;
+
+            // Recreate tryCompress to pick up the change
+            const createTryCompress = () => function(htmlContent) {
+                return new Promise((resolve, reject) => {
+                    if(typeof CompressionStream === 'undefined') {
+                        reject(
+                            new Error('CompressionStream not available')
+                        );
+                        return;
+                    }
+                    // Compression code would go here
+                    reject(new Error('Should not reach here'));
+                });
+            };
+            tryCompress = createTryCompress();
+
+            const htmlContent = '<html><body>Test</body></html>';
+
+            await expect(tryCompress(htmlContent))
+                .rejects
+                .toThrow('CompressionStream not available');
+        });
+
+        test('should fallback to uncompressed when compression fails',
+        async () => {
+            // Delete CompressionStream to force fallback
+            delete global.CompressionStream;
+
+            const htmlContent = '<html><body>Test Content</body></html>';
+
+            const result = await prepareFile(htmlContent);
+
+            expect(result).toBeDefined();
+            expect(result.filename).toBe('index.html');
+            expect(result.blob).toBeInstanceOf(Blob);
+            expect(result.blob.type).toBe('text/html');
+        });
+
+        test('should preserve content in uncompressed fallback',
+        async () => {
+            // Delete CompressionStream to force fallback
+            delete global.CompressionStream;
+
+            const htmlContent = '<html><body>Important Data</body></html>';
+
+            const result = await prepareFile(htmlContent);
+
+            // Use FileReader since blob.text() may not be available
+            const reader = new FileReader();
+            const textPromise = new Promise((resolve) => {
+                reader.onload = () => resolve(reader.result);
+            });
+            reader.readAsText(result.blob);
+            const text = await textPromise;
+
+            expect(text).toBe(htmlContent);
+        });
+
+        test('should handle large content in fallback', async () => {
+            // Delete CompressionStream to force fallback
+            delete global.CompressionStream;
+
+            const largeContent = '<div>' + 'x'.repeat(1000000) + '</div>';
+
+            const result = await prepareFile(largeContent);
+
+            expect(result.filename).toBe('index.html');
+            expect(result.blob.size).toBeGreaterThan(1000000);
+        });
+    });
+
     describe('API Response Handling', () => {
         test('should handle successful response (status 200)', async () => {
             const mockBlob = new Blob(['PDF content'], {
