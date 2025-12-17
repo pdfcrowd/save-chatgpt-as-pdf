@@ -1175,7 +1175,7 @@ pdfcrowdChatGPT.init = function() {
                             if(rightPos !== pdfcrowd_block.style.right ||
                                prevClass !== newClass) {
                                 pdfcrowd_block.style.right = rightPos;
-                                pdfcrowd_block.style.top = '10px';
+                                pdfcrowd_block.style.top = '8px';
                                 prevClass = newClass;
                                 pdfcrowd_block.classList.remove(
                                     'pdfcrowd-btn-smaller',
