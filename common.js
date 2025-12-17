@@ -100,7 +100,7 @@ pdfcrowdChatGPT.init = function() {
  }
 
  .pdfcrowd-fs-small {
-     font-size: .8125rem;
+     font-size: 14px;
      line-height: 1.25rem;
  }
 
@@ -1012,7 +1012,7 @@ pdfcrowdChatGPT.init = function() {
 
     const pdfcrowd_block = addPdfcrowdBlock();
 
-    const BUTTON_MARGIN = 4;
+    const BUTTON_MARGIN = -2;
     const WIDTHS = [{
         width: 135,
         cls: null
