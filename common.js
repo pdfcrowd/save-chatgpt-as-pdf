@@ -25,6 +25,8 @@ pdfcrowdChatGPT.init = function() {
      height: 36px;
      top: 10px;
      right: 180px;
+     display: flex;
+     align-items: center;
  }
 
  @media (max-width: 767px) {
@@ -98,7 +100,8 @@ pdfcrowdChatGPT.init = function() {
  }
 
  .pdfcrowd-fs-small {
-     font-size: .875rem;
+     font-size: 14px;
+     line-height: 1.25rem;
  }
 
  #pdfcrowd-more {
@@ -1007,32 +1010,9 @@ pdfcrowdChatGPT.init = function() {
         return container;
     }
 
-    function isVisible(el) {
-        if(el) {
-            const style = window.getComputedStyle(el);
-            return style.display !== 'none' &&
-                style.visibility !== 'hidden' &&
-                style.opacity !== '0';
-        }
-    }
-
-    function areElementsColliding(element1, element2) {
-        const rect1 = element1.getBoundingClientRect();
-        const rect2 = element2.getBoundingClientRect();
-
-        return !(
-            rect1.right < rect2.left ||
-                rect1.left > rect2.right ||
-                rect1.bottom < rect2.top ||
-                rect1.top > rect2.bottom
-        );
-    }
-
-    const shared_urls = /^https:\/\/chat(gpt)?.com\/share\//;
-    const is_shared = shared_urls.test(window.location.href);
     const pdfcrowd_block = addPdfcrowdBlock();
 
-    const BUTTON_MARGIN = 8;
+    const BUTTON_MARGIN = -2;
     const WIDTHS = [{
         width: 135,
         cls: null
@@ -1047,68 +1027,79 @@ pdfcrowdChatGPT.init = function() {
         cls: 'pdfcrowd-btn-xs-small'
     }];
 
-    function getNewPos(elements) {
+    // Find rightmost visible content inside an element
+    function findRightmostContent(container) {
+        const elements = container.querySelectorAll('button, a, [role="button"]');
+        let rightmost = null;
+        let maxRight = 0;
 
-        for(let i = elements.length - 1; i > 0; i--) {
-            const rect1 = elements[i - 1].getBoundingClientRect();
-            const rect2 = elements[i].getBoundingClientRect();
-
-            // Calculate horizontal space between the two elements
-            const space = rect2.left - (rect1.left + rect1.width);
-
-            for(let j = 0; j < WIDTHS.length; j++) {
-                const width = WIDTHS[j];
-                if(space >= width.width) {
-                    return [rect2.left, width.cls];
-                }
+        elements.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if(rect.width > 0 && rect.right > maxRight) {
+                maxRight = rect.right;
+                rightmost = el;
             }
-        }
+        });
 
-        return null;
-    }
-
-    function getTopBar() {
-        const elements = document.querySelectorAll('.draggable.sticky.top-0');
-        for(let element of elements) {
-            if(isVisible(element)) {
-                return element;
-            }
-        }
-
-        return null;
+        return rightmost;
     }
 
     let prevClass = null;
 
     function changeButtonPosition() {
-        const topBar = getTopBar();
-        if(topBar) {
-            // find button position not overlapping anything
-            const newPos = getNewPos(topBar.querySelectorAll(':scope > div'));
-            if(newPos) {
-                const newPosStr = Math.round(
-                    window.innerWidth - newPos[0] + BUTTON_MARGIN) + 'px';
-                const newClass = newPos[1];
-                if(newPosStr !== pdfcrowd_block.style.right ||
-                   prevClass !== newClass) {
-                    pdfcrowd_block.style.right = newPosStr;
-                    prevClass = newClass;
-                    pdfcrowd_block.classList.remove(
-                        'pdfcrowd-btn-smaller',
-                        'pdfcrowd-btn-smallest',
-                        'pdfcrowd-btn-xs-small');
-                    if(newClass) {
-                        pdfcrowd_block.classList.add(newClass);
+        const header = document.getElementById('page-header');
+
+        if(header) {
+            const children = header.querySelectorAll(':scope > div');
+            if(children.length >= 3) {
+                const leftContainer = children[1];
+                const rightContainer = children[2];
+                const leftContent = findRightmostContent(leftContainer);
+                const rightRect = rightContainer.getBoundingClientRect();
+
+                if(leftContent) {
+                    const leftContentRect = leftContent.getBoundingClientRect();
+                    const gapStart = leftContentRect.right;
+                    const gapEnd = rightRect.left;
+                    const availableSpace = gapEnd - gapStart;
+
+                    // Try each button size
+                    for(let j = 0; j < WIDTHS.length; j++) {
+                        const width = WIDTHS[j];
+                        if(availableSpace >= width.width + BUTTON_MARGIN * 2) {
+                            const rightPos = Math.round(
+                                window.innerWidth - gapEnd + BUTTON_MARGIN
+                            ) + 'px';
+                            const newClass = width.cls;
+
+                            if(rightPos !== pdfcrowd_block.style.right ||
+                               prevClass !== newClass) {
+                                pdfcrowd_block.style.right = rightPos;
+                                prevClass = newClass;
+                                pdfcrowd_block.classList.remove(
+                                    'pdfcrowd-btn-smaller',
+                                    'pdfcrowd-btn-smallest',
+                                    'pdfcrowd-btn-xs-small');
+                                if(newClass) {
+                                    pdfcrowd_block.classList.add(newClass);
+                                }
+                            }
+                            return;
+                        }
                     }
                 }
-                return;
             }
         }
+
+        // Fallback position
+        pdfcrowd_block.style.right = '18px';
+        pdfcrowd_block.style.top = '44px';
         pdfcrowd_block.classList.remove(
             'pdfcrowd-btn-smaller',
             'pdfcrowd-btn-smallest',
             'pdfcrowd-btn-xs-small');
-        prevClass = null;
+        pdfcrowd_block.classList.add('pdfcrowd-btn-smaller');
+        prevClass = 'pdfcrowd-btn-smaller';
     }
 
     function checkForContent() {

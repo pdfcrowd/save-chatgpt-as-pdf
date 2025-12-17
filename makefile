@@ -1,6 +1,6 @@
 SINGLE_FILE_JS = userscript/save-chatgpt-as-pdf.all.user.js
 
-.PHONY: help test build check-version build-firefox build-chrome build-userscript-single-file copyfiles
+.PHONY: help test build check-version build-firefox build-chrome build-userscript-single-file copyfiles bump-version
 
 help:
 	cat makefile
@@ -35,3 +35,6 @@ copyfiles:
 	rm -rf /tmp/save-chatgpt-to-pdf/
 	mkdir /tmp/save-chatgpt-to-pdf/
 	rsync -q -av --exclude-from=exclude.txt . /tmp/save-chatgpt-to-pdf/
+
+bump-version:
+	@tools/bump-version.sh

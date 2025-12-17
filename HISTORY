@@ -1,3 +1,6 @@
+Changes in 3.5
+- Fixed: button positioning
+
 Changes in 3.4
 - Improved: ability to process larger conversations
 - Changed: icons are now excluded by default for new installations (existing users unaffected)
