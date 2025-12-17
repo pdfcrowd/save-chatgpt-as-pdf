@@ -1007,29 +1007,6 @@ pdfcrowdChatGPT.init = function() {
         return container;
     }
 
-    function isVisible(el) {
-        if(el) {
-            const style = window.getComputedStyle(el);
-            return style.display !== 'none' &&
-                style.visibility !== 'hidden' &&
-                style.opacity !== '0';
-        }
-    }
-
-    function areElementsColliding(element1, element2) {
-        const rect1 = element1.getBoundingClientRect();
-        const rect2 = element2.getBoundingClientRect();
-
-        return !(
-            rect1.right < rect2.left ||
-                rect1.left > rect2.right ||
-                rect1.bottom < rect2.top ||
-                rect1.top > rect2.bottom
-        );
-    }
-
-    const shared_urls = /^https:\/\/chat(gpt)?.com\/share\//;
-    const is_shared = shared_urls.test(window.location.href);
     const pdfcrowd_block = addPdfcrowdBlock();
 
     const BUTTON_MARGIN = 8;
@@ -1047,8 +1024,26 @@ pdfcrowdChatGPT.init = function() {
         cls: 'pdfcrowd-btn-xs-small'
     }];
 
+    // Find rightmost visible content inside an element
+    function findRightmostContent(container) {
+        // Look for interactive elements inside the container
+        const elements = container.querySelectorAll('button, a, [role="button"]');
+        let rightmost = null;
+        let maxRight = 0;
+
+        elements.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if(rect.width > 0 && rect.right > maxRight) {
+                maxRight = rect.right;
+                rightmost = el;
+            }
+        });
+
+        return rightmost;
+    }
+
     // DEBUG: Layout analysis logging
-    function logLayoutDebug() {
+    function logLayoutDebug(result) {
         const log = {
             timestamp: new Date().toISOString(),
             windowWidth: window.innerWidth,
@@ -1062,59 +1057,71 @@ pdfcrowdChatGPT.init = function() {
             log.header = {
                 id: 'page-header',
                 tagName: header.tagName,
-                classes: header.className.split(' ').slice(0, 5).join(' '),
                 rect: {
                     left: Math.round(headerRect.left),
                     right: Math.round(headerRect.right),
-                    width: Math.round(headerRect.width),
-                    top: Math.round(headerRect.top),
-                    height: Math.round(headerRect.height)
+                    width: Math.round(headerRect.width)
                 }
             };
 
-            // Analyze all direct children
-            const children = header.querySelectorAll(':scope > *');
+            // Analyze direct children
+            const children = header.querySelectorAll(':scope > div');
             log.children = [];
             children.forEach((child, idx) => {
                 const rect = child.getBoundingClientRect();
                 const style = window.getComputedStyle(child);
-                log.children.push({
+                const childInfo = {
                     index: idx,
-                    tagName: child.tagName,
-                    id: child.id || null,
-                    classes: child.className.split(' ').slice(0, 3).join(' '),
                     position: style.position,
                     rect: {
                         left: Math.round(rect.left),
                         right: Math.round(rect.right),
-                        width: Math.round(rect.width),
-                        top: Math.round(rect.top)
+                        width: Math.round(rect.width)
                     },
-                    textContent: child.textContent.trim().slice(0, 30)
-                });
+                    textContent: child.textContent.trim().slice(0, 25)
+                };
+
+                // For child[1], find actual content inside
+                if(idx === 1) {
+                    const innerContent = findRightmostContent(child);
+                    if(innerContent) {
+                        const innerRect = innerContent.getBoundingClientRect();
+                        childInfo.innerContent = {
+                            tagName: innerContent.tagName,
+                            rect: {
+                                left: Math.round(innerRect.left),
+                                right: Math.round(innerRect.right),
+                                width: Math.round(innerRect.width)
+                            },
+                            text: innerContent.textContent.trim().slice(0, 20)
+                        };
+                    }
+                }
+
+                log.children.push(childInfo);
             });
 
-            // Calculate gaps between non-absolute children
-            const nonAbsChildren = log.children.filter(
-                c => c.position !== 'absolute');
-            log.gaps = [];
-            for(let i = 0; i < nonAbsChildren.length - 1; i++) {
-                const c1 = nonAbsChildren[i];
-                const c2 = nonAbsChildren[i + 1];
-                log.gaps.push({
-                    between: `${c1.index}-${c2.index}`,
-                    gap: c2.rect.left - c1.rect.right
-                });
+            // Calculate actual gap using inner content
+            if(children.length >= 3) {
+                const leftContainer = children[1];
+                const rightContainer = children[2];
+                const leftContent = findRightmostContent(leftContainer);
+                const rightRect = rightContainer.getBoundingClientRect();
+
+                if(leftContent) {
+                    const leftContentRect = leftContent.getBoundingClientRect();
+                    log.actualGap = {
+                        leftContentRight: Math.round(leftContentRect.right),
+                        rightContainerLeft: Math.round(rightRect.left),
+                        gap: Math.round(rightRect.left - leftContentRect.right)
+                    };
+                }
             }
-        } else {
-            log.header = null;
-            // Try old selector
-            const oldHeader = document.querySelector('.draggable.sticky.top-0');
-            log.oldSelectorFound = !!oldHeader;
-            if(oldHeader) {
-                log.oldHeaderTag = oldHeader.tagName;
-                log.oldHeaderId = oldHeader.id;
-            }
+        }
+
+        // Add positioning result
+        if(result) {
+            log.result = result;
         }
 
         console.log('=== PDFCROWD LAYOUT DEBUG ===');
@@ -1124,76 +1131,93 @@ pdfcrowdChatGPT.init = function() {
         return log;
     }
 
-    function getNewPos(elements) {
-
-        for(let i = elements.length - 1; i > 0; i--) {
-            const rect1 = elements[i - 1].getBoundingClientRect();
-            const rect2 = elements[i].getBoundingClientRect();
-
-            // Calculate horizontal space between the two elements
-            const space = rect2.left - (rect1.left + rect1.width);
-
-            for(let j = 0; j < WIDTHS.length; j++) {
-                const width = WIDTHS[j];
-                if(space >= width.width) {
-                    return [rect2.left, width.cls];
-                }
-            }
-        }
-
-        return null;
-    }
-
-    function getTopBar() {
-        const elements = document.querySelectorAll('.draggable.sticky.top-0');
-        for(let element of elements) {
-            if(isVisible(element)) {
-                return element;
-            }
-        }
-
-        return null;
-    }
-
     let prevClass = null;
     let lastLogTime = 0;
 
     function changeButtonPosition() {
-        // DEBUG: Log layout every 5 seconds max
-        const now = Date.now();
-        if(now - lastLogTime > 5000) {
-            logLayoutDebug();
-            lastLogTime = now;
-        }
+        const header = document.getElementById('page-header');
+        let result = { action: 'none' };
 
-        const topBar = getTopBar();
-        if(topBar) {
-            // find button position not overlapping anything
-            const newPos = getNewPos(topBar.querySelectorAll(':scope > div'));
-            if(newPos) {
-                const newPosStr = Math.round(
-                    window.innerWidth - newPos[0] + BUTTON_MARGIN) + 'px';
-                const newClass = newPos[1];
-                if(newPosStr !== pdfcrowd_block.style.right ||
-                   prevClass !== newClass) {
-                    pdfcrowd_block.style.right = newPosStr;
-                    prevClass = newClass;
-                    pdfcrowd_block.classList.remove(
-                        'pdfcrowd-btn-smaller',
-                        'pdfcrowd-btn-smallest',
-                        'pdfcrowd-btn-xs-small');
-                    if(newClass) {
-                        pdfcrowd_block.classList.add(newClass);
+        if(header) {
+            const children = header.querySelectorAll(':scope > div');
+            if(children.length >= 3) {
+                const leftContainer = children[1];
+                const rightContainer = children[2];
+                const leftContent = findRightmostContent(leftContainer);
+                const rightRect = rightContainer.getBoundingClientRect();
+
+                if(leftContent) {
+                    const leftContentRect = leftContent.getBoundingClientRect();
+                    const gapStart = leftContentRect.right;
+                    const gapEnd = rightRect.left;
+                    const availableSpace = gapEnd - gapStart;
+
+                    // Try each button size
+                    for(let j = 0; j < WIDTHS.length; j++) {
+                        const width = WIDTHS[j];
+                        if(availableSpace >= width.width + BUTTON_MARGIN * 2) {
+                            const rightPos = Math.round(
+                                window.innerWidth - gapEnd + BUTTON_MARGIN
+                            ) + 'px';
+                            const newClass = width.cls;
+
+                            result = {
+                                action: 'positioned',
+                                availableSpace: Math.round(availableSpace),
+                                buttonWidth: width.width,
+                                buttonClass: newClass || 'full',
+                                rightPos: rightPos
+                            };
+
+                            if(rightPos !== pdfcrowd_block.style.right ||
+                               prevClass !== newClass) {
+                                pdfcrowd_block.style.right = rightPos;
+                                pdfcrowd_block.style.top = '10px';
+                                prevClass = newClass;
+                                pdfcrowd_block.classList.remove(
+                                    'pdfcrowd-btn-smaller',
+                                    'pdfcrowd-btn-smallest',
+                                    'pdfcrowd-btn-xs-small');
+                                if(newClass) {
+                                    pdfcrowd_block.classList.add(newClass);
+                                }
+                            }
+
+                            // DEBUG: Log every 5 seconds
+                            const now = Date.now();
+                            if(now - lastLogTime > 5000) {
+                                logLayoutDebug(result);
+                                lastLogTime = now;
+                            }
+                            return;
+                        }
                     }
+
+                    result = {
+                        action: 'fallback',
+                        reason: 'no space',
+                        availableSpace: Math.round(availableSpace)
+                    };
                 }
-                return;
             }
         }
+
+        // Fallback position
+        pdfcrowd_block.style.right = '18px';
+        pdfcrowd_block.style.top = '44px';
         pdfcrowd_block.classList.remove(
             'pdfcrowd-btn-smaller',
             'pdfcrowd-btn-smallest',
             'pdfcrowd-btn-xs-small');
-        prevClass = null;
+        pdfcrowd_block.classList.add('pdfcrowd-btn-smaller');
+        prevClass = 'pdfcrowd-btn-smaller';
+
+        // DEBUG: Log every 5 seconds
+        const now = Date.now();
+        if(now - lastLogTime > 5000) {
+            logLayoutDebug(result);
+            lastLogTime = now;
+        }
     }
 
     function checkForContent() {
