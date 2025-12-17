@@ -1047,6 +1047,83 @@ pdfcrowdChatGPT.init = function() {
         cls: 'pdfcrowd-btn-xs-small'
     }];
 
+    // DEBUG: Layout analysis logging
+    function logLayoutDebug() {
+        const log = {
+            timestamp: new Date().toISOString(),
+            windowWidth: window.innerWidth,
+            windowHeight: window.innerHeight
+        };
+
+        // Find header by ID
+        const header = document.getElementById('page-header');
+        if(header) {
+            const headerRect = header.getBoundingClientRect();
+            log.header = {
+                id: 'page-header',
+                tagName: header.tagName,
+                classes: header.className.split(' ').slice(0, 5).join(' '),
+                rect: {
+                    left: Math.round(headerRect.left),
+                    right: Math.round(headerRect.right),
+                    width: Math.round(headerRect.width),
+                    top: Math.round(headerRect.top),
+                    height: Math.round(headerRect.height)
+                }
+            };
+
+            // Analyze all direct children
+            const children = header.querySelectorAll(':scope > *');
+            log.children = [];
+            children.forEach((child, idx) => {
+                const rect = child.getBoundingClientRect();
+                const style = window.getComputedStyle(child);
+                log.children.push({
+                    index: idx,
+                    tagName: child.tagName,
+                    id: child.id || null,
+                    classes: child.className.split(' ').slice(0, 3).join(' '),
+                    position: style.position,
+                    rect: {
+                        left: Math.round(rect.left),
+                        right: Math.round(rect.right),
+                        width: Math.round(rect.width),
+                        top: Math.round(rect.top)
+                    },
+                    textContent: child.textContent.trim().slice(0, 30)
+                });
+            });
+
+            // Calculate gaps between non-absolute children
+            const nonAbsChildren = log.children.filter(
+                c => c.position !== 'absolute');
+            log.gaps = [];
+            for(let i = 0; i < nonAbsChildren.length - 1; i++) {
+                const c1 = nonAbsChildren[i];
+                const c2 = nonAbsChildren[i + 1];
+                log.gaps.push({
+                    between: `${c1.index}-${c2.index}`,
+                    gap: c2.rect.left - c1.rect.right
+                });
+            }
+        } else {
+            log.header = null;
+            // Try old selector
+            const oldHeader = document.querySelector('.draggable.sticky.top-0');
+            log.oldSelectorFound = !!oldHeader;
+            if(oldHeader) {
+                log.oldHeaderTag = oldHeader.tagName;
+                log.oldHeaderId = oldHeader.id;
+            }
+        }
+
+        console.log('=== PDFCROWD LAYOUT DEBUG ===');
+        console.log(JSON.stringify(log, null, 2));
+        console.log('=============================');
+
+        return log;
+    }
+
     function getNewPos(elements) {
 
         for(let i = elements.length - 1; i > 0; i--) {
@@ -1079,8 +1156,16 @@ pdfcrowdChatGPT.init = function() {
     }
 
     let prevClass = null;
+    let lastLogTime = 0;
 
     function changeButtonPosition() {
+        // DEBUG: Log layout every 5 seconds max
+        const now = Date.now();
+        if(now - lastLogTime > 5000) {
+            logLayoutDebug();
+            lastLogTime = now;
+        }
+
         const topBar = getTopBar();
         if(topBar) {
             // find button position not overlapping anything
