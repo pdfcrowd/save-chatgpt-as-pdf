@@ -23,8 +23,10 @@ pdfcrowdChatGPT.init = function() {
  .pdfcrowd-block {
      position: fixed;
      height: 36px;
-     top: 10px;
+     top: 8px;
      right: 180px;
+     display: flex;
+     align-items: center;
  }
 
  @media (max-width: 767px) {
@@ -98,7 +100,8 @@ pdfcrowdChatGPT.init = function() {
  }
 
  .pdfcrowd-fs-small {
-     font-size: .875rem;
+     font-size: .8125rem;
+     line-height: 1.25rem;
  }
 
  #pdfcrowd-more {
@@ -1009,7 +1012,7 @@ pdfcrowdChatGPT.init = function() {
 
     const pdfcrowd_block = addPdfcrowdBlock();
 
-    const BUTTON_MARGIN = 8;
+    const BUTTON_MARGIN = 4;
     const WIDTHS = [{
         width: 135,
         cls: null
