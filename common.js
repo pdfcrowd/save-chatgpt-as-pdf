@@ -1029,7 +1029,7 @@ pdfcrowdChatGPT.init = function() {
 
     // Find rightmost visible content inside an element
     function findRightmostContent(container) {
-        const elements = container.querySelectorAll('button, a, [role="button"]');
+        const elements = container.querySelectorAll('button, a, [role="button"], [type="button"]');
         let rightmost = null;
         let maxRight = 0;
 
@@ -1075,6 +1075,7 @@ pdfcrowdChatGPT.init = function() {
                             if(rightPos !== pdfcrowd_block.style.right ||
                                prevClass !== newClass) {
                                 pdfcrowd_block.style.right = rightPos;
+                                pdfcrowd_block.style.top = '10px';
                                 prevClass = newClass;
                                 pdfcrowd_block.classList.remove(
                                     'pdfcrowd-btn-smaller',
