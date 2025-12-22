@@ -25,8 +25,6 @@ pdfcrowdChatGPT.init = function() {
      height: 36px;
      top: 10px;
      right: 180px;
-     display: flex;
-     align-items: center;
  }
 
  @media (max-width: 767px) {
