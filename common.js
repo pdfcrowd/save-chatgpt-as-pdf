@@ -1104,7 +1104,10 @@ pdfcrowdChatGPT.init = function() {
     }
 
     function checkForContent() {
-        if(document.querySelector('[data-message-author-role="user"]')) {
+        const validUrl = !window.location.href.startsWith(
+            'https://chatgpt.com/gpts/editor');
+
+        if(validUrl && document.querySelector('[data-message-author-role="user"]')) {
             changeButtonPosition();
 
             pdfcrowd_block.classList.remove('pdfcrowd-hidden');

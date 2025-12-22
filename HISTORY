@@ -1,5 +1,6 @@
 Changes in 3.6
 - Fixed: position on resize and on custom agent chats
+- Fixed: do not show the button on the edit page for a custom agent
 
 Changes in 3.5
 - Fixed: button positioning
