@@ -20,12 +20,13 @@ pdfcrowdShared.defaultOptions = {
     toc: '',
     no_icons: false,
     model_name: false,
+    source_link: false,
     datetime_format: 'none',
     q_align: 'justified',
     q_rounded: false
 }
 
-pdfcrowdShared.version = 'v3.6';
+pdfcrowdShared.version = 'v3.7';
 
 pdfcrowdShared.rateUsLink = '#';
 pdfcrowdShared.hasOptions = true;

@@ -18,6 +18,15 @@ pdfcrowdChatGPT.sendChunkedData = function(
     let currentChunk = 0;
 
     const sendNextChunk = function() {
+        if (!chrome.runtime?.id) {
+            fnCleanup();
+            pdfcrowdChatGPT.showError(
+                null,
+                "Extension was updated. Please refresh the page."
+            );
+            return;
+        }
+
         if (currentChunk >= totalChunks) {
             chrome.runtime.sendMessage({
                 contentScriptQuery: 'processData',

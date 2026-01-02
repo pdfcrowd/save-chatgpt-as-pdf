@@ -188,6 +188,7 @@ chrome.runtime.onInstalled.addListener((details) => {
             toc: '',
             no_icons: true,
             model_name: false,
+            source_link: false,
             datetime_format: 'none',
             q_align: 'justified',
             q_rounded: false
