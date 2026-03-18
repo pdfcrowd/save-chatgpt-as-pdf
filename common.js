@@ -458,7 +458,9 @@ pdfcrowdChatGPT.init = function() {
 `;
 
     function findRow(element) {
-        return element.closest('article');
+        return element.closest(
+            'section[data-testid^="conversation-turn"]'
+        ) || element.closest('article');
     }
 
     function hasParent(element, parent) {

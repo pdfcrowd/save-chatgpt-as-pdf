@@ -1,3 +1,6 @@
+Changes in 3.8
+- fix selection to PDF
+
 Changes in 3.7
 - Added: conversation source link in the PDF
 - Improved: updated addon detection
