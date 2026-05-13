@@ -1065,37 +1065,39 @@ pdfcrowdChatGPT.init = function() {
                 const rightContainer = children[2];
                 const leftContent = findRightmostContent(leftContainer);
                 const rightRect = rightContainer.getBoundingClientRect();
+                const gapEnd = rightRect.left;
+                // When the left container is empty (e.g. newer
+                // ChatGPT layouts), fall back to the header's
+                // left edge so the available-space check still
+                // works and the right-sized button is picked.
+                const gapStart = leftContent
+                    ? leftContent.getBoundingClientRect().right
+                    : header.getBoundingClientRect().left;
+                const availableSpace = gapEnd - gapStart;
 
-                if(leftContent) {
-                    const leftContentRect = leftContent.getBoundingClientRect();
-                    const gapStart = leftContentRect.right;
-                    const gapEnd = rightRect.left;
-                    const availableSpace = gapEnd - gapStart;
+                // Try each button size
+                for(let j = 0; j < WIDTHS.length; j++) {
+                    const width = WIDTHS[j];
+                    if(availableSpace >= width.width + BUTTON_MARGIN * 2) {
+                        const rightPos = Math.round(
+                            window.innerWidth - gapEnd + BUTTON_MARGIN
+                        ) + 'px';
+                        const newClass = width.cls;
 
-                    // Try each button size
-                    for(let j = 0; j < WIDTHS.length; j++) {
-                        const width = WIDTHS[j];
-                        if(availableSpace >= width.width + BUTTON_MARGIN * 2) {
-                            const rightPos = Math.round(
-                                window.innerWidth - gapEnd + BUTTON_MARGIN
-                            ) + 'px';
-                            const newClass = width.cls;
-
-                            if(rightPos !== pdfcrowd_block.style.right ||
-                               prevClass !== newClass) {
-                                pdfcrowd_block.style.right = rightPos;
-                                pdfcrowd_block.style.top = '10px';
-                                prevClass = newClass;
-                                pdfcrowd_block.classList.remove(
-                                    'pdfcrowd-btn-smaller',
-                                    'pdfcrowd-btn-smallest',
-                                    'pdfcrowd-btn-xs-small');
-                                if(newClass) {
-                                    pdfcrowd_block.classList.add(newClass);
-                                }
+                        if(rightPos !== pdfcrowd_block.style.right ||
+                           prevClass !== newClass) {
+                            pdfcrowd_block.style.right = rightPos;
+                            pdfcrowd_block.style.top = '10px';
+                            prevClass = newClass;
+                            pdfcrowd_block.classList.remove(
+                                'pdfcrowd-btn-smaller',
+                                'pdfcrowd-btn-smallest',
+                                'pdfcrowd-btn-xs-small');
+                            if(newClass) {
+                                pdfcrowd_block.classList.add(newClass);
                             }
-                            return;
                         }
+                        return;
                     }
                 }
             }
