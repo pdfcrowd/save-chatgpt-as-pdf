@@ -177,6 +177,34 @@ pdfcrowdChatGPT.init = function() {
      color: #000;
  }
 
+ .pdfcrowd-loading-overlay {
+     z-index: 10001;
+     display: none;
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(255, 255, 255, 0.96);
+     color: #222;
+     justify-content: center;
+     align-items: center;
+     flex-direction: column;
+     gap: 1rem;
+     font-size: 1rem;
+ }
+
+ .pdfcrowd-loading-overlay.pdfcrowd-dark {
+     background: rgba(33, 33, 33, 0.96);
+     color: #eee;
+ }
+
+ .pdfcrowd-loading-overlay .pdfcrowd-spinner {
+     width: 2.5rem;
+     height: 2.5rem;
+     border-width: 5px;
+ }
+
  .pdfcrowd-dialog {
      background: #fff;
      padding: 0;
@@ -401,6 +429,16 @@ pdfcrowdChatGPT.init = function() {
         </a>
     </div>
 
+    <div class="pdfcrowd-loading-overlay" id="pdfcrowd-loading-overlay">
+        <div class="pdfcrowd-spinner"></div>
+        <div>Loading conversation...</div>
+        <button id="pdfcrowd-cancel-loading"
+                class="btn btn-secondary"
+                style="margin-top: .5em;">
+            Cancel
+        </button>
+    </div>
+
     <div class="pdfcrowd-overlay" id="pdfcrowd-error-overlay">
         <div class="pdfcrowd-dialog">
             <div class="pdfcrowd-dialog-header">
@@ -586,6 +624,171 @@ pdfcrowdChatGPT.init = function() {
         return element;
     }
 
+    function findVirtualizedScroller() {
+        const turns = document.querySelectorAll(
+            '[data-testid^="conversation-turn"]');
+        if(!turns.length) {
+            return null;
+        }
+        let el = turns[0].parentElement;
+        while(el && el !== document.body) {
+            const s = window.getComputedStyle(el);
+            if((s.overflowY === 'auto' || s.overflowY === 'scroll') &&
+               el.scrollHeight > el.clientHeight + 100) {
+                return el;
+            }
+            el = el.parentElement;
+        }
+        return null;
+    }
+
+    function hasUnrenderedTurns() {
+        const turns = document.querySelectorAll(
+            '[data-testid^="conversation-turn"]');
+        for(let i = 0; i < turns.length; i++) {
+            if(turns[i].innerHTML.length === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function captureRenderedTurns(cache) {
+        const turns = document.querySelectorAll(
+            '[data-testid^="conversation-turn"]');
+        for(let i = 0; i < turns.length; i++) {
+            const t = turns[i];
+            const html = t.innerHTML;
+            if(html.length === 0) {
+                continue;
+            }
+            const id = t.getAttribute('data-testid');
+            const prev = cache.get(id);
+            if(!prev || html.length > prev.length) {
+                cache.set(id, t.outerHTML);
+            }
+        }
+    }
+
+    let harvestCancelled = false;
+
+    function requestHarvestCancel() {
+        harvestCancelled = true;
+    }
+
+    function showLoadingOverlay() {
+        harvestCancelled = false;
+        const ov = document.getElementById('pdfcrowd-loading-overlay');
+        if(!ov) {
+            return;
+        }
+        ov.classList.toggle(
+            'pdfcrowd-dark', !isLight(document.body));
+        ov.style.display = 'flex';
+    }
+
+    function hideLoadingOverlay() {
+        const ov = document.getElementById('pdfcrowd-loading-overlay');
+        if(ov) {
+            ov.style.display = 'none';
+        }
+    }
+
+    // ChatGPT share pages use a virtualized scroll list - only the
+    // turns near the viewport are present in the DOM. Walk the scroll
+    // container top-to-bottom, harvesting each turn's outerHTML as it
+    // renders, so the PDF includes the full conversation.
+    async function harvestVirtualizedTurns() {
+        const cache = new Map();
+        if(!hasUnrenderedTurns()) {
+            return cache;
+        }
+        const scroller = findVirtualizedScroller();
+        if(!scroller) {
+            return cache;
+        }
+        const origScroll = scroller.scrollTop;
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+        showLoadingOverlay();
+        try {
+            scroller.scrollTop = 0;
+            await wait(450);
+            if(harvestCancelled) {
+                await restoreScroll(scroller, origScroll);
+                return cache;
+            }
+            captureRenderedTurns(cache);
+            const step = Math.max(
+                200, Math.floor(scroller.clientHeight * 0.7));
+            const maxIter = 400;
+            let stableTries = 0;
+            let lastHeight = scroller.scrollHeight;
+            for(let i = 0; i < maxIter; i++) {
+                if(harvestCancelled) {
+                    break;
+                }
+                const maxScroll =
+                    scroller.scrollHeight - scroller.clientHeight;
+                const next = scroller.scrollTop + step;
+                if(next >= maxScroll) {
+                    scroller.scrollTop = scroller.scrollHeight;
+                    await wait(400);
+                    captureRenderedTurns(cache);
+                    if(scroller.scrollHeight === lastHeight) {
+                        stableTries++;
+                        if(stableTries >= 2) {
+                            break;
+                        }
+                    } else {
+                        stableTries = 0;
+                        lastHeight = scroller.scrollHeight;
+                    }
+                    continue;
+                }
+                scroller.scrollTop = next;
+                await wait(220);
+                captureRenderedTurns(cache);
+            }
+            await restoreScroll(scroller, origScroll);
+        } finally {
+            hideLoadingOverlay();
+        }
+        return cache;
+    }
+
+    // After scrolling, the virtualizer may not yet have re-rendered the
+    // turns near origScroll, leaving scrollHeight too small and clamping
+    // our restore. Poll a few times until scrollTop sticks.
+    async function restoreScroll(scroller, origScroll) {
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+        for(let i = 0; i < 8; i++) {
+            scroller.scrollTop = origScroll;
+            await wait(120);
+            if(scroller.scrollTop === origScroll) {
+                return;
+            }
+        }
+    }
+
+    function restoreVirtualizedTurns(clone, cache) {
+        if(!cache || cache.size === 0) {
+            return;
+        }
+        const turns = clone.querySelectorAll(
+            '[data-testid^="conversation-turn"]');
+        turns.forEach(t => {
+            if(t.innerHTML.length > 0) {
+                return;
+            }
+            const id = t.getAttribute('data-testid');
+            const cached = cache.get(id);
+            if(cached) {
+                // outerHTML setter replaces the node with parsed nodes
+                t.outerHTML = cached;
+            }
+        });
+    }
+
     function showHelp() {
         document.getElementById('pdfcrowd-extra-btns').classList.add(
             'pdfcrowd-hidden');
@@ -658,7 +861,10 @@ pdfcrowdChatGPT.init = function() {
             `nav a[href="${window.location.pathname}"]`);
         if(chatTitle) {
             // use chat title 1st as it does not contain model name in it
-            title = chatTitle.textContent.trim();
+            // clone and strip screen-reader-only spans (e.g. "Pinned")
+            const clone = chatTitle.cloneNode(true);
+            clone.querySelectorAll('.sr-only').forEach(el => el.remove());
+            title = clone.textContent.trim();
         }
         if(!title) {
             const titles = document.getElementsByTagName('title');
@@ -868,25 +1074,43 @@ pdfcrowdChatGPT.init = function() {
             btnElems[i].classList.add('pdfcrowd-invisible');
         }
 
-        setTimeout(function() {
+        function restoreButtonState() {
+            btnConvert.disabled = false;
+            spinner.classList.add('pdfcrowd-hidden');
+            for(let i = 0; i < btnElems.length; i++) {
+                btnElems[i].classList.remove('pdfcrowd-invisible');
+            }
+        }
+
+        setTimeout(async function() {
+            const selection = window.getSelection();
+            const hasSelection = selection &&
+                !selection.isCollapsed && selection.rangeCount > 0;
+            let turnCache = null;
+            if(!hasSelection) {
+                try {
+                    turnCache = await harvestVirtualizedTurns();
+                } catch(e) {
+                    turnCache = null;
+                }
+            }
+            if(harvestCancelled) {
+                restoreButtonState();
+                return;
+            }
             pdfcrowdShared.getOptions(function(options) {
                 let main = document.getElementsByTagName('main');
                 main = main.length ? main[0] :
                     document.querySelector('div.grow');
                 const main_clone = prepareContent(main);
+                restoreVirtualizedTurns(main_clone, turnCache);
 
                 applyQuestionStyles(main_clone, options);
 
                 let title = getTitle();
                 let filename = title;
 
-                function cleanup() {
-                    btnConvert.disabled = false;
-                    spinner.classList.add('pdfcrowd-hidden');
-                    for(let i = 0; i < btnElems.length; i++) {
-                        btnElems[i].classList.remove('pdfcrowd-invisible');
-                    }
-                }
+                const cleanup = restoreButtonState;
 
                 function doConvert() {
 
@@ -989,6 +1213,9 @@ pdfcrowdChatGPT.init = function() {
             'click', event => {
                 showHelp();
             });
+
+        document.getElementById('pdfcrowd-cancel-loading')
+            .addEventListener('click', requestHarvestCancel);
 
         document.getElementById('pdfcrowd-more').addEventListener('click', event => {
             event.stopPropagation();

@@ -1,5 +1,7 @@
 Changes in 3.9
 - Fixed button positioning
+- Fixed: generate full document when message navigator popover is presented
+- Fixed: remove pinned text from a title and filename
 
 Changes in 3.8
 - fix selection to PDF
