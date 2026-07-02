@@ -511,6 +511,13 @@ pdfcrowdChatGPT.init = function() {
         return false;
     }
 
+    function findRows(element) {
+        const rows = element.querySelectorAll(
+            'section[data-testid^="conversation-turn"]');
+        return Array.from(
+            rows.length ? rows : element.querySelectorAll('article'));
+    }
+
     function addImgBase64Src(element) {
         const images = element.querySelectorAll('img');
 
@@ -559,31 +566,26 @@ pdfcrowdChatGPT.init = function() {
         addImgBase64Src(element);
 
         const selection = window.getSelection();
-        if(!selection.isCollapsed) {
-            const rangeCount = selection.rangeCount;
-            if(rangeCount > 0) {
-                const startElement = findRow(
-                    selection.getRangeAt(0).startContainer.parentElement);
-                if(startElement && hasParent(startElement, element)) {
-                    // selection is in the main block
-                    const endElement = findRow(
-                        selection.getRangeAt(
-                            rangeCount-1).endContainer.parentElement);
-
-                    const newContainer = document.createElement('main');
-                    newContainer.classList.add('h-full', 'w-full');
-                    let currentElement = startElement;
-                    while(currentElement) {
-                        const child_clone = currentElement.cloneNode(true);
-                        newContainer.appendChild(child_clone);
-                        persistCanvases(currentElement, child_clone);
-                        if(currentElement === endElement) {
-                            break;
-                        }
-                        currentElement = currentElement.nextElementSibling;
-                    }
-                    return newContainer;
+        if(!selection.isCollapsed && selection.rangeCount > 0) {
+            const startElement = findRow(
+                selection.getRangeAt(0).startContainer.parentElement);
+            if(startElement && hasParent(startElement, element)) {
+                // selection starts in the main block; rows are not
+                // necessarily siblings, so collect every row the
+                // selection intersects instead of walking siblings
+                let rows = findRows(element).filter(
+                    row => selection.containsNode(row, true));
+                if(!rows.length) {
+                    rows = [startElement];
                 }
+                const newContainer = document.createElement('main');
+                newContainer.classList.add('h-full', 'w-full');
+                for(const row of rows) {
+                    const child_clone = row.cloneNode(true);
+                    newContainer.appendChild(child_clone);
+                    persistCanvases(row, child_clone);
+                }
+                return newContainer;
             }
         }
         let element_clone = element.cloneNode(true);

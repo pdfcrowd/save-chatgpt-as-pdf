@@ -26,7 +26,7 @@ pdfcrowdShared.defaultOptions = {
     q_rounded: false
 }
 
-pdfcrowdShared.version = 'v3.9';
+pdfcrowdShared.version = 'v3.10';
 
 pdfcrowdShared.rateUsLink = '#';
 pdfcrowdShared.hasOptions = true;
