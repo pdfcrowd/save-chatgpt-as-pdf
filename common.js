@@ -432,11 +432,40 @@ pdfcrowdChatGPT.init = function() {
     <div class="pdfcrowd-loading-overlay" id="pdfcrowd-loading-overlay">
         <div class="pdfcrowd-spinner"></div>
         <div>Loading conversation...</div>
+        <div id="pdfcrowd-loading-progress"></div>
         <button id="pdfcrowd-cancel-loading"
                 class="btn btn-secondary"
                 style="margin-top: .5em;">
             Cancel
         </button>
+    </div>
+
+    <div class="pdfcrowd-overlay" id="pdfcrowd-incomplete-overlay">
+        <div class="pdfcrowd-dialog">
+            <div class="pdfcrowd-dialog-header">
+                Conversation is not fully loaded
+                <span class="pdfcrowd-close-x pdfcrowd-close-btn">&times;</span>
+            </div>
+            <div class="pdfcrowd-dialog-body">
+                <p id="pdfcrowd-incomplete-message"></p>
+                <p>
+                    Scroll up through the conversation so older
+                    messages load, then save again.<br>
+                    You can also save just the loaded part now.
+                </p>
+            </div>
+            <div class="pdfcrowd-dialog-footer">
+                <button id="pdfcrowd-save-partial"
+                        class="btn btn-secondary"
+                        style="margin-right: .5em">
+                    Save loaded part
+                </button>
+                <button class="btn btn-secondary pdfcrowd-close-btn"
+                        style="margin-left: .5em">
+                    Cancel
+                </button>
+            </div>
+        </div>
     </div>
 
     <div class="pdfcrowd-overlay" id="pdfcrowd-error-overlay">
@@ -626,50 +655,224 @@ pdfcrowdChatGPT.init = function() {
         return element;
     }
 
-    function findVirtualizedScroller() {
-        const turns = document.querySelectorAll(
-            '[data-testid^="conversation-turn"]');
-        if(!turns.length) {
+    // ------------------------------------------------------------------
+    // Full-conversation capture.
+    //
+    // ChatGPT virtualizes the conversation: only the turns near the
+    // viewport exist in the DOM, the rest are represented by empty
+    // placeholder elements. Every turn that gets rendered is captured
+    // into a per-conversation cache (passively while the user reads
+    // and actively at save time), and the PDF is assembled from the
+    // live DOM plus this cache.
+    //
+    // Every assumption about the ChatGPT page structure used by the
+    // capture lives in the chatgptDom adapter so a future redesign
+    // needs changes in one place only.
+    // ------------------------------------------------------------------
+
+    const chatgptDom = {
+        turnSelector: '[data-testid^="conversation-turn"]',
+
+        getTurns: function(root) {
+            return Array.from(
+                (root || document).querySelectorAll(this.turnSelector));
+        },
+
+        // ordinal of the turn within the conversation, parsed from
+        // data-testid="conversation-turn-<N>"; numbering is
+        // contiguous and starts at 1
+        turnNumber: function(turn) {
+            const match = (turn.getAttribute('data-testid') || '')
+                  .match(/(\d+)\s*$/);
+            return match ? parseInt(match[1], 10) : null;
+        },
+
+        // stable turn identity that survives re-numbering; may be
+        // null on older page variants
+        turnKey: function(turn) {
+            return turn.getAttribute('data-turn-id');
+        },
+
+        // scrollable ancestor of the conversation
+        findScroller: function() {
+            const turns = this.getTurns();
+            if(!turns.length) {
+                return null;
+            }
+            let el = turns[0].parentElement;
+            while(el && el !== document.body) {
+                const s = window.getComputedStyle(el);
+                if((s.overflowY === 'auto' || s.overflowY === 'scroll') &&
+                   el.scrollHeight > el.clientHeight + 100) {
+                    return el;
+                }
+                el = el.parentElement;
+            }
             return null;
-        }
-        let el = turns[0].parentElement;
-        while(el && el !== document.body) {
-            const s = window.getComputedStyle(el);
-            if((s.overflowY === 'auto' || s.overflowY === 'scroll') &&
-               el.scrollHeight > el.clientHeight + 100) {
-                return el;
+        },
+
+        // container of the conversation list: the closest ancestor
+        // holding every turn, so turns whose wrappers have extra
+        // sibling nodes are still covered; its children are the
+        // turn wrappers and, when the conversation is virtualized,
+        // unrendered-turn placeholders
+        findTurnList: function(root) {
+            const turns = this.getTurns(root);
+            if(!turns.length) {
+                return null;
             }
-            el = el.parentElement;
+            const last = turns[turns.length - 1];
+            let el = turns[0].parentElement;
+            while(el && !el.contains(last)) {
+                el = el.parentElement;
+            }
+            return el;
+        },
+
+        // a placeholder stands in for an unrendered turn: an element
+        // with no content that occupies space in the conversation
+        isPlaceholder: function(el) {
+            return !el.querySelector(this.turnSelector) &&
+                el.innerHTML.trim() === '';
+        },
+
+        countPlaceholders: function() {
+            const list = this.findTurnList(document);
+            if(!list) {
+                return 0;
+            }
+            return Array.from(list.children).filter(
+                el => this.isPlaceholder(el) && el.clientHeight > 40
+            ).length;
+        },
+
+        // dot buttons of the message navigator rail; clicking them
+        // runs ChatGPT's own navigation code which renders the
+        // target turns even though the virtualizer ignores synthetic
+        // scrolling (scrollTop, wheel and keyboard events)
+        findNavigatorDots: function() {
+            // the active dot marks the rail, but other UI elements
+            // (e.g. menu items) may carry data-toc-active too, so
+            // accept only a parent that looks like a dot rail: all
+            // children are buttons and there are several of them
+            const actives = document.querySelectorAll(
+                'button[data-toc-active]');
+            for(let i = 0; i < actives.length; i++) {
+                const rail = actives[i].parentElement;
+                if(!rail) {
+                    continue;
+                }
+                const btns = Array.from(rail.children).filter(
+                    el => el.tagName === 'BUTTON');
+                if(btns.length >= 3 &&
+                   btns.length === rail.children.length) {
+                    return btns;
+                }
+            }
+            return [];
         }
-        return null;
+    };
+
+    // turn number -> {key, len, html}; reset on conversation change
+    const turnCapture = {
+        path: null,
+        turns: new Map()
+    };
+
+    function captureRenderedTurns() {
+        if(turnCapture.path !== window.location.pathname) {
+            turnCapture.turns.clear();
+            turnCapture.path = window.location.pathname;
+        }
+        chatgptDom.getTurns(document).forEach(turn => {
+            const num = chatgptDom.turnNumber(turn);
+            const len = turn.innerHTML.length;
+            if(num === null || len === 0) {
+                return;
+            }
+            const key = chatgptDom.turnKey(turn);
+            const prev = turnCapture.turns.get(num);
+            if(prev && prev.key === key && prev.len >= len) {
+                return;
+            }
+            turnCapture.turns.set(num, {
+                key: key,
+                len: len,
+                html: serializeTurn(turn)
+            });
+        });
     }
 
-    function hasUnrenderedTurns() {
-        const turns = document.querySelectorAll(
-            '[data-testid^="conversation-turn"]');
-        for(let i = 0; i < turns.length; i++) {
-            if(turns[i].innerHTML.length === 0) {
-                return true;
-            }
+    // serialize with canvases and expirable images materialized so
+    // the copy stays complete after ChatGPT evicts the turn
+    function serializeTurn(turn) {
+        addImgBase64Src(turn);
+        if(!turn.querySelector('canvas') &&
+           !turn.querySelector('img[data-pdfcrowd-img-src]')) {
+            return turn.outerHTML;
         }
-        return false;
+        const clone = turn.cloneNode(true);
+        persistCanvases(turn, clone);
+        applyDataSrcBase(clone);
+        return clone.outerHTML;
     }
 
-    function captureRenderedTurns(cache) {
-        const turns = document.querySelectorAll(
-            '[data-testid^="conversation-turn"]');
-        for(let i = 0; i < turns.length; i++) {
-            const t = turns[i];
-            const html = t.innerHTML;
-            if(html.length === 0) {
-                continue;
+    let captureTimer = null;
+
+    function scheduleTurnCapture() {
+        if(captureTimer) {
+            return;
+        }
+        captureTimer = setTimeout(function() {
+            captureTimer = null;
+            try {
+                captureRenderedTurns();
+            } catch(e) {
+                // capturing must never break the page
             }
-            const id = t.getAttribute('data-testid');
-            const prev = cache.get(id);
-            if(!prev || html.length > prev.length) {
-                cache.set(id, t.outerHTML);
+        }, 500);
+    }
+
+    function startTurnCapture() {
+        new MutationObserver(scheduleTurnCapture).observe(
+            document.body, {childList: true, subtree: true});
+        scheduleTurnCapture();
+    }
+
+    // total turn count and the numbers of turns that are neither
+    // rendered in the DOM nor captured yet
+    function turnStats() {
+        const known = new Set(turnCapture.turns.keys());
+        let maxNum = 0;
+        known.forEach(num => {
+            maxNum = Math.max(maxNum, num);
+        });
+        chatgptDom.getTurns(document).forEach(turn => {
+            const num = chatgptDom.turnNumber(turn);
+            if(num === null) {
+                return;
+            }
+            maxNum = Math.max(maxNum, num);
+            if(turn.innerHTML.length > 0) {
+                known.add(num);
+            }
+        });
+        const missing = [];
+        for(let n = 1; n <= maxNum; n++) {
+            if(!known.has(n)) {
+                missing.push(n);
             }
         }
+        return {total: maxNum, missing: missing};
+    }
+
+    function missingTurnNumbers() {
+        return turnStats().missing;
+    }
+
+    function conversationIncomplete() {
+        return missingTurnNumbers().length > 0 ||
+            chatgptDom.countPlaceholders() > 0;
     }
 
     let harvestCancelled = false;
@@ -696,98 +899,275 @@ pdfcrowdChatGPT.init = function() {
         }
     }
 
-    // ChatGPT share pages use a virtualized scroll list - only the
-    // turns near the viewport are present in the DOM. Walk the scroll
-    // container top-to-bottom, harvesting each turn's outerHTML as it
-    // renders, so the PDF includes the full conversation.
-    async function harvestVirtualizedTurns() {
-        const cache = new Map();
-        if(!hasUnrenderedTurns()) {
-            return cache;
+    function updateLoadingProgress() {
+        const el = document.getElementById(
+            'pdfcrowd-loading-progress');
+        if(!el) {
+            return;
         }
-        const scroller = findVirtualizedScroller();
-        if(!scroller) {
-            return cache;
-        }
-        const origScroll = scroller.scrollTop;
-        const wait = (ms) => new Promise(r => setTimeout(r, ms));
-        showLoadingOverlay();
-        try {
-            scroller.scrollTop = 0;
-            await wait(450);
+        const stats = turnStats();
+        el.textContent = (stats.total - stats.missing.length) +
+            ' / ' + stats.total + ' messages';
+    }
+
+    const harvestWait = (ms) => new Promise(r => setTimeout(r, ms));
+
+    // smallest turn number from which every turn up to the highest
+    // known one is captured or rendered; 1 means nothing is missing
+    function capturedFrontier() {
+        const missing = missingTurnNumbers();
+        return missing.length ? missing[missing.length - 1] + 1 : 1;
+    }
+
+    // Walk the message navigator dots from the last prompt upward.
+    // Clicking a dot is the only way a content script can make the
+    // current virtualizer render turns - it ignores synthetic
+    // scrolling entirely, but its own navigation code renders the
+    // turns around the target. The conversation end is rendered on
+    // load and each dot's exchange sits directly above the previous
+    // one, so walking in reverse keeps the captured range contiguous
+    // and the frontier tells exactly when an exchange (prompt plus
+    // replies) is complete.
+    async function harvestByNavigator() {
+        const dots = chatgptDom.findNavigatorDots();
+        for(let i = dots.length - 1; i >= 0; i--) {
             if(harvestCancelled) {
-                await restoreScroll(scroller, origScroll);
-                return cache;
+                return;
             }
-            captureRenderedTurns(cache);
-            const step = Math.max(
-                200, Math.floor(scroller.clientHeight * 0.7));
-            const maxIter = 400;
-            let stableTries = 0;
-            let lastHeight = scroller.scrollHeight;
-            for(let i = 0; i < maxIter; i++) {
+            const startFrontier = capturedFrontier();
+            if(startFrontier <= 1) {
+                return;
+            }
+            dots[i].click();
+            let grew = false;
+            for(let p = 0; p < 20; p++) {
+                await harvestWait(300);
                 if(harvestCancelled) {
+                    return;
+                }
+                const before = turnCapture.turns.size;
+                captureRenderedTurns();
+                updateLoadingProgress();
+                grew = grew || turnCapture.turns.size > before;
+                if(capturedFrontier() < startFrontier) {
+                    // the gap below the frontier filled up - this
+                    // dot's exchange is fully captured
                     break;
                 }
-                const maxScroll =
-                    scroller.scrollHeight - scroller.clientHeight;
-                const next = scroller.scrollTop + step;
-                if(next >= maxScroll) {
-                    scroller.scrollTop = scroller.scrollHeight;
-                    await wait(400);
-                    captureRenderedTurns(cache);
-                    if(scroller.scrollHeight === lastHeight) {
-                        stableTries++;
-                        if(stableTries >= 2) {
-                            break;
-                        }
-                    } else {
-                        stableTries = 0;
-                        lastHeight = scroller.scrollHeight;
-                    }
-                    continue;
+                if(!grew && p >= 5) {
+                    // nothing renders: the dot's zone was already
+                    // captured, move to an earlier one
+                    break;
                 }
-                scroller.scrollTop = next;
-                await wait(220);
-                captureRenderedTurns(cache);
             }
-            await restoreScroll(scroller, origScroll);
+        }
+    }
+
+    // Walk the scroll container top-to-bottom, capturing turns as
+    // they render. Works on page variants where programmatic
+    // scrolling still renders turns (e.g. share pages); gives up
+    // early on pages that ignore it.
+    async function harvestByScrolling(scroller) {
+        scroller.scrollTop = 0;
+        await harvestWait(450);
+        if(harvestCancelled) {
+            return;
+        }
+        captureRenderedTurns();
+        const step = Math.max(
+            200, Math.floor(scroller.clientHeight * 0.7));
+        const maxIter = 400;
+        let capturedCount = turnCapture.turns.size;
+        let idleSteps = 0;
+        let stableTries = 0;
+        let lastHeight = scroller.scrollHeight;
+        for(let i = 0; i < maxIter; i++) {
+            if(harvestCancelled) {
+                return;
+            }
+            const maxScroll =
+                scroller.scrollHeight - scroller.clientHeight;
+            const next = scroller.scrollTop + step;
+            if(next >= maxScroll) {
+                scroller.scrollTop = scroller.scrollHeight;
+                await harvestWait(400);
+                captureRenderedTurns();
+                if(scroller.scrollHeight === lastHeight) {
+                    stableTries++;
+                    if(stableTries >= 2) {
+                        return;
+                    }
+                } else {
+                    stableTries = 0;
+                    lastHeight = scroller.scrollHeight;
+                }
+                continue;
+            }
+            scroller.scrollTop = next;
+            await harvestWait(220);
+            captureRenderedTurns();
+            updateLoadingProgress();
+            if(turnCapture.turns.size === capturedCount) {
+                idleSteps++;
+                if(idleSteps >= 8) {
+                    return;
+                }
+            } else {
+                capturedCount = turnCapture.turns.size;
+                idleSteps = 0;
+            }
+        }
+    }
+
+    // Fill the capture cache with every turn that is not rendered
+    // yet, trying each harvest strategy until nothing is missing.
+    async function harvestMissingTurns() {
+        captureRenderedTurns();
+        if(!conversationIncomplete()) {
+            return turnCapture.turns;
+        }
+        const scroller = chatgptDom.findScroller();
+        const origScroll = scroller ? scroller.scrollTop : 0;
+        showLoadingOverlay();
+        updateLoadingProgress();
+        try {
+            await harvestByNavigator();
+            if(!harvestCancelled && missingTurnNumbers().length) {
+                // second pass catches exchanges whose rendering
+                // exceeded the per-dot wait; it costs nothing when
+                // the first pass captured everything
+                await harvestByNavigator();
+            }
+            if(!harvestCancelled && scroller &&
+               missingTurnNumbers().length) {
+                await harvestByScrolling(scroller);
+            }
+            if(scroller) {
+                await restoreScroll(scroller, origScroll);
+            }
         } finally {
             hideLoadingOverlay();
         }
-        return cache;
+        return turnCapture.turns;
     }
 
     // After scrolling, the virtualizer may not yet have re-rendered the
     // turns near origScroll, leaving scrollHeight too small and clamping
     // our restore. Poll a few times until scrollTop sticks.
     async function restoreScroll(scroller, origScroll) {
-        const wait = (ms) => new Promise(r => setTimeout(r, ms));
         for(let i = 0; i < 8; i++) {
             scroller.scrollTop = origScroll;
-            await wait(120);
+            await harvestWait(120);
             if(scroller.scrollTop === origScroll) {
                 return;
             }
         }
     }
 
+    // Rebuild the full conversation in the clone from the capture
+    // cache: fill old-style empty turn elements in place and insert
+    // turns the virtualizer left out of the DOM in turn order.
     function restoreVirtualizedTurns(clone, cache) {
         if(!cache || cache.size === 0) {
             return;
         }
-        const turns = clone.querySelectorAll(
-            '[data-testid^="conversation-turn"]');
-        turns.forEach(t => {
-            if(t.innerHTML.length > 0) {
+        chatgptDom.getTurns(clone).forEach(turn => {
+            if(turn.innerHTML.length > 0) {
                 return;
             }
-            const id = t.getAttribute('data-testid');
-            const cached = cache.get(id);
+            const num = chatgptDom.turnNumber(turn);
+            const cached = num === null ? null : cache.get(num);
             if(cached) {
                 // outerHTML setter replaces the node with parsed nodes
-                t.outerHTML = cached;
+                turn.outerHTML = cached.html;
             }
+        });
+        const list = chatgptDom.findTurnList(clone);
+        if(!list) {
+            appendCachedTurns(clone, cache);
+            return;
+        }
+        // drop unrendered-turn placeholders so they do not leave
+        // blank gaps in the PDF
+        Array.from(list.children).forEach(child => {
+            if(chatgptDom.isPlaceholder(child)) {
+                child.remove();
+            }
+        });
+        const wrappers = new Map();
+        chatgptDom.getTurns(clone).forEach(turn => {
+            const num = chatgptDom.turnNumber(turn);
+            if(num === null) {
+                return;
+            }
+            let wrapper = turn;
+            while(wrapper.parentElement &&
+                  wrapper.parentElement !== list) {
+                wrapper = wrapper.parentElement;
+            }
+            wrappers.set(num, wrapper);
+        });
+        const renderedNums = Array.from(wrappers.keys())
+              .sort((a, b) => a - b);
+        let tail = renderedNums.length
+            ? wrappers.get(renderedNums[renderedNums.length - 1])
+            : null;
+        const cachedNums = Array.from(cache.keys())
+              .sort((a, b) => a - b);
+        cachedNums.forEach(num => {
+            if(wrappers.has(num)) {
+                return;
+            }
+            const holder = document.createElement('div');
+            holder.innerHTML = cache.get(num).html;
+            // anchor-relative insertion cannot fail on a container
+            // mismatch, unlike list.insertBefore
+            const nextNum = renderedNums.find(n => n > num);
+            if(nextNum !== undefined) {
+                wrappers.get(nextNum).insertAdjacentElement(
+                    'beforebegin', holder);
+            } else if(tail) {
+                tail.insertAdjacentElement('afterend', holder);
+                tail = holder;
+            } else {
+                list.appendChild(holder);
+                tail = holder;
+            }
+        });
+    }
+
+    // last-resort rebuild when the clone contains no turns at all
+    function appendCachedTurns(clone, cache) {
+        const container = document.createElement('div');
+        Array.from(cache.keys()).sort((a, b) => a - b)
+            .forEach(num => {
+                const holder = document.createElement('div');
+                holder.innerHTML = cache.get(num).html;
+                container.appendChild(holder);
+            });
+        clone.appendChild(container);
+    }
+
+    // Layer of last resort: the conversation could not be loaded
+    // fully, let the user decide instead of silently truncating.
+    function showIncompleteDialog(missingCount, onSave, onCancel) {
+        const dlg = document.getElementById(
+            'pdfcrowd-incomplete-overlay');
+        const noun = missingCount === 1 ? 'message' : 'messages';
+        document.getElementById('pdfcrowd-incomplete-message')
+            .textContent = missingCount + ' ' + noun +
+            ' could not be loaded automatically.';
+        dlg.style.display = 'flex';
+        document.getElementById('pdfcrowd-save-partial').onclick =
+            function() {
+                dlg.style.display = 'none';
+                onSave();
+            };
+        dlg.querySelectorAll('.pdfcrowd-close-btn').forEach(btn => {
+            btn.onclick = function() {
+                dlg.style.display = 'none';
+                onCancel();
+            };
         });
     }
 
@@ -1089,9 +1469,11 @@ pdfcrowdChatGPT.init = function() {
             const hasSelection = selection &&
                 !selection.isCollapsed && selection.rangeCount > 0;
             let turnCache = null;
+            let missingCount = 0;
             if(!hasSelection) {
                 try {
-                    turnCache = await harvestVirtualizedTurns();
+                    turnCache = await harvestMissingTurns();
+                    missingCount = missingTurnNumbers().length;
                 } catch(e) {
                     turnCache = null;
                 }
@@ -1100,7 +1482,7 @@ pdfcrowdChatGPT.init = function() {
                 restoreButtonState();
                 return;
             }
-            pdfcrowdShared.getOptions(function(options) {
+            function convertWithOptions(options) {
                 let main = document.getElementsByTagName('main');
                 main = main.length ? main[0] :
                     document.querySelector('div.grow');
@@ -1195,7 +1577,17 @@ pdfcrowdChatGPT.init = function() {
                 } else {
                     doConvert();
                 }
-            });
+            }
+            if(missingCount > 0) {
+                showIncompleteDialog(
+                    missingCount,
+                    function() {
+                        pdfcrowdShared.getOptions(convertWithOptions);
+                    },
+                    restoreButtonState);
+            } else {
+                pdfcrowdShared.getOptions(convertWithOptions);
+            }
         }, 0);
     }
 
@@ -1379,6 +1771,7 @@ pdfcrowdChatGPT.init = function() {
     }
 
     setInterval(checkForContent, 1000);
+    startTurnCapture();
 }
 
 pdfcrowdChatGPT.showError = function(status, text, hideContact) {

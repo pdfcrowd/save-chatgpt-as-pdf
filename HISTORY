@@ -1,3 +1,13 @@
+Changes in 3.11
+- Fixed: full conversation capture for the new ChatGPT virtualized
+  list which removes off-screen messages from the page entirely
+- Added: messages are captured in the background while reading, so
+  saving needs little or no extra loading
+- Added: loading progress (loaded/total messages) in the overlay
+- Added: warning dialog with a partial-save option when some
+  messages cannot be loaded automatically, instead of a silently
+  truncated PDF
+
 Changes in 3.10
 - Fixed missing text in partial conversation
 
